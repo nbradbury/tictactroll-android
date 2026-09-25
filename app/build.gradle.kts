@@ -39,13 +39,6 @@ detekt {
     config.setFrom(rootProject.file("config/detekt/detekt.yml"))
 }
 
-// detekt 1.23 bundles Kotlin 2.0.21 and fails if Gradle aligns it to the project's newer Kotlin.
-configurations.matching { it.name == "detekt" }.configureEach {
-    resolutionStrategy.eachDependency {
-        if (requested.group == "org.jetbrains.kotlin") useVersion("2.0.21")
-    }
-}
-
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
