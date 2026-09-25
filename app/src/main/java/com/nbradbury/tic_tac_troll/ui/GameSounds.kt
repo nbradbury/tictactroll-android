@@ -17,7 +17,7 @@ import com.nbradbury.tic_tac_troll.game.Team
 import kotlin.random.Random
 
 /**
- * Plays a thunk as each troll lands, voices each new speech bubble, and plays a stinger when a game is won, while
+ * Plays a thunk as each troll lands, voices each new speech bubble, and plays a stinger when a game ends, while
  * [enabled]. Against the CPU a Bramble win is a loss for the player, so it gets the sad trombone instead.
  */
 @Composable
@@ -45,6 +45,7 @@ private class SoundPlayer(context: Context) {
     private val thunk = pool.load(context, R.raw.thunk, 1)
     private val fanfare = pool.load(context, R.raw.fanfare, 1)
     private val wompWomp = pool.load(context, R.raw.womp_womp, 1)
+    private val tie = pool.load(context, R.raw.tie, 1)
     private val voices = mapOf(
         (Team.A to "meh") to pool.load(context, R.raw.meh_gorp, 1),
         (Team.A to "bleh") to pool.load(context, R.raw.bleh_gorp, 1),
@@ -71,10 +72,14 @@ private class SoundPlayer(context: Context) {
             .mapNotNullTo(mutableSetOf()) { (key, text) -> teamOf(state, key)?.let { it to text } }
             .forEach { voice -> voices[voice]?.let { play(it) } }
 
-        val winner = state.result?.winner
-        if (previous.result == null && winner != null) {
-            val playerLost = state.mode == Mode.CPU && winner == Team.B
-            play(if (playerLost) wompWomp else fanfare, varyPitch = false)
+        val result = state.result
+        if (previous.result == null && result != null) {
+            val stinger = when {
+                result.isDraw -> tie
+                state.mode == Mode.CPU && result.winner == Team.B -> wompWomp
+                else -> fanfare
+            }
+            play(stinger, varyPitch = false)
         }
     }
 
