@@ -20,6 +20,7 @@ import com.nbradbury.tic_tac_troll.game.Screen
 import com.nbradbury.tic_tac_troll.ui.BackgroundMusic
 import com.nbradbury.tic_tac_troll.ui.GameScreen
 import com.nbradbury.tic_tac_troll.ui.MenuScreen
+import com.nbradbury.tic_tac_troll.ui.TrollVoices
 import com.nbradbury.tic_tac_troll.ui.backdrop
 
 class MainActivity : ComponentActivity() {
@@ -37,6 +38,7 @@ class MainActivity : ComponentActivity() {
 fun TicTacTrollApp(vm: GameViewModel = viewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     BackgroundMusic(R.raw.where_the_trolls_tread)
+    TrollVoices(state)
     Box(Modifier.fillMaxSize().backdrop()) {
         when (state.screen) {
             Screen.MENU -> MenuScreen(
