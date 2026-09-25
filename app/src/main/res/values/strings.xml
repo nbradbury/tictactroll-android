@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">Tic Tac Troll</string>
+    <string name="title_tic_tac">Tic Tac</string>
+    <string name="title_troll">Troll</string>
+    <string name="tagline">a game of mild contempt</string>
+    <string name="gorp">Gorp</string>
+    <string name="bramble">Bramble</string>
+    <string name="bramble_cpu">Bramble (CPU)</string>
+    <string name="gorp_blue">Gorp · blue</string>
+    <string name="bramble_red">Bramble · red</string>
+    <string name="mode_pvp">2 players</string>
+    <string name="mode_cpu">vs CPU</string>
+    <string name="cpu_skill">CPU skill</string>
+    <string name="difficulty_easy">Easy</string>
+    <string name="difficulty_medium">Medium</string>
+    <string name="difficulty_hard">Troll</string>
+    <string name="start">Start</string>
+    <string name="back">Back to menu</string>
+    <string name="restart">Restart</string>
+    <string name="draw_label">DRAW</string>
+    <string name="status_move">%1$s\'s move</string>
+    <string name="status_cpu_thinking">Bramble is thinking… barely.</string>
+    <string name="result_wins">%1$s wins.</string>
+    <string name="result_draw">Draw.</string>
+    <string name="result_fallen">%1$s’s trolls hit the dirt.</string>
+    <string name="result_draw_sub">Nobody’s impressed. Meh.</string>
+    <string name="menu">Menu</string>
+    <string name="rematch">Rematch</string>
+</resources>
