@@ -1,6 +1,17 @@
 package com.nbradbury.tic_tac_troll.ui
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import com.nbradbury.tic_tac_troll.ui.theme.Scrim
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -60,12 +71,31 @@ fun MenuScreen(
     onMode: (Mode) -> Unit,
     onDifficulty: (Difficulty) -> Unit,
     onStart: () -> Unit,
+    soundOn: Boolean,
+    onSoundChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
+) {
+    Box(modifier.fillMaxSize()) {
+        MenuContent(state, onMode, onDifficulty, onStart)
+        SoundToggle(
+            on = soundOn,
+            onChange = onSoundChange,
+            modifier = Modifier.align(Alignment.TopEnd).padding(top = 4.dp, end = 12.dp),
+        )
+    }
+}
+
+@Composable
+private fun MenuContent(
+    state: GameState,
+    onMode: (Mode) -> Unit,
+    onDifficulty: (Difficulty) -> Unit,
+    onStart: () -> Unit,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(10.dp),
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .padding(start = 24.dp, end = 24.dp, top = 36.dp, bottom = 28.dp),
     ) {
@@ -82,6 +112,7 @@ fun MenuScreen(
             ),
             separator = "\n",
         )
+        BasicText(stringResource(R.string.byline), style = sans(14, FontWeight.Normal, Muted))
 
         Row(
             horizontalArrangement = Arrangement.spacedBy(18.dp),
@@ -197,5 +228,50 @@ private fun SelectableButton(
             .clickable(onClick = onClick),
     ) {
         BasicText(text, style = sans(fontSize, weight, if (selected) OnAccent else Ink))
+    }
+}
+
+/** A round speaker button: sound waves when [on], a cross when muted. */
+@Composable
+private fun SoundToggle(on: Boolean, onChange: (Boolean) -> Unit, modifier: Modifier = Modifier) {
+    val label = stringResource(R.string.sound)
+    Canvas(
+        modifier
+            .size(48.dp)
+            .clip(CircleShape)
+            .background(Scrim)
+            .toggleable(value = on, role = Role.Switch, onValueChange = onChange)
+            .semantics { contentDescription = label }
+            .padding(12.dp),
+    ) {
+        // Drawn on a 24-unit grid.
+        val u = size.width / 24
+        val speaker = Path().apply {
+            moveTo(3 * u, 9 * u)
+            lineTo(8 * u, 9 * u)
+            lineTo(13 * u, 4 * u)
+            lineTo(13 * u, 20 * u)
+            lineTo(8 * u, 15 * u)
+            lineTo(3 * u, 15 * u)
+            close()
+        }
+        drawPath(speaker, Ink)
+        val stroke = Stroke(width = 2 * u, cap = StrokeCap.Round)
+        if (on) {
+            for (radius in listOf(4f, 8f)) {
+                drawArc(
+                    Ink,
+                    startAngle = -45f,
+                    sweepAngle = 90f,
+                    useCenter = false,
+                    topLeft = Offset((13 - radius) * u, (12 - radius) * u),
+                    size = Size(2 * radius * u, 2 * radius * u),
+                    style = stroke,
+                )
+            }
+        } else {
+            drawLine(Ink, Offset(16 * u, 9 * u), Offset(22 * u, 15 * u), 2 * u, StrokeCap.Round)
+            drawLine(Ink, Offset(22 * u, 9 * u), Offset(16 * u, 15 * u), 2 * u, StrokeCap.Round)
+        }
     }
 }

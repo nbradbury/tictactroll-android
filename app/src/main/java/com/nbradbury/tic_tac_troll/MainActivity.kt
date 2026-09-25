@@ -1,5 +1,6 @@
 package com.nbradbury.tic_tac_troll
 
+import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -12,15 +13,20 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.edit
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nbradbury.tic_tac_troll.game.GameViewModel
 import com.nbradbury.tic_tac_troll.game.Screen
 import com.nbradbury.tic_tac_troll.ui.BackgroundMusic
 import com.nbradbury.tic_tac_troll.ui.GameScreen
+import com.nbradbury.tic_tac_troll.ui.GameSounds
 import com.nbradbury.tic_tac_troll.ui.MenuScreen
-import com.nbradbury.tic_tac_troll.ui.TrollVoices
 import com.nbradbury.tic_tac_troll.ui.backdrop
 
 class MainActivity : ComponentActivity() {
@@ -34,11 +40,15 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+private const val KEY_SOUND = "sound_on"
+
 @Composable
 fun TicTacTrollApp(vm: GameViewModel = viewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
-    BackgroundMusic(R.raw.where_the_trolls_tread)
-    TrollVoices(state)
+    val prefs = LocalContext.current.getSharedPreferences("settings", Context.MODE_PRIVATE)
+    var soundOn by remember { mutableStateOf(prefs.getBoolean(KEY_SOUND, true)) }
+    BackgroundMusic(R.raw.where_the_trolls_tread, enabled = soundOn)
+    GameSounds(state, enabled = soundOn)
     Box(Modifier.fillMaxSize().backdrop()) {
         when (state.screen) {
             Screen.MENU -> MenuScreen(
@@ -46,6 +56,11 @@ fun TicTacTrollApp(vm: GameViewModel = viewModel()) {
                 onMode = vm::setMode,
                 onDifficulty = vm::setDifficulty,
                 onStart = vm::start,
+                soundOn = soundOn,
+                onSoundChange = {
+                    soundOn = it
+                    prefs.edit { putBoolean(KEY_SOUND, it) }
+                },
                 modifier = Modifier.systemBarsPadding(),
             )
             Screen.GAME -> {

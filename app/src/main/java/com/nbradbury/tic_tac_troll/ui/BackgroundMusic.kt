@@ -9,9 +9,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.LifecycleStartEffect
 
-/** Loops [res] while the UI is started, pausing in the background. */
+/** Loops [res] while the UI is started and [enabled], pausing otherwise. */
 @Composable
-fun BackgroundMusic(@RawRes res: Int, volume: Float = 0.6f) {
+fun BackgroundMusic(@RawRes res: Int, enabled: Boolean, volume: Float = 0.6f) {
     val context = LocalContext.current
     val player = remember(res) {
         val attributes = AudioAttributes.Builder()
@@ -24,8 +24,9 @@ fun BackgroundMusic(@RawRes res: Int, volume: Float = 0.6f) {
         }
     }
     DisposableEffect(player) { onDispose { player.release() } }
-    LifecycleStartEffect(player) {
-        player.start()
-        onStopOrDispose { player.pause() }
+    LifecycleStartEffect(player, enabled) {
+        if (enabled) player.start()
+        // pause() on a never-started player is an illegal state and breaks later start() calls.
+        onStopOrDispose { if (player.isPlaying) player.pause() }
     }
 }

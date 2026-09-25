@@ -2,6 +2,7 @@
     <string name="app_name">Tic Tac Troll</string>
     <string name="title_tic_tac">Tic Tac</string>
     <string name="title_troll">Troll</string>
+    <string name="byline" translatable="false">by Nick Bradbury</string>
     <string name="tagline">a game of mild contempt</string>
     <string name="gorp">Gorp</string>
     <string name="bramble">Bramble</string>
@@ -15,6 +16,7 @@
     <string name="difficulty_medium">Medium</string>
     <string name="difficulty_hard">Troll</string>
     <string name="start">Start</string>
+    <string name="sound">Sound</string>
     <string name="back">Back to menu</string>
     <string name="restart">Restart</string>
     <string name="draw_label">DRAW</string>
