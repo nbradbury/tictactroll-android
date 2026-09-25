@@ -45,6 +45,8 @@ data class GameState(
     /** True during the draw sequence, when every troll stares at the player. */
     val stare: Boolean = false,
     val locked: Boolean = false,
+    /** A menu troll that's briefly hopping with excitement. */
+    val excitedTroll: Int? = null,
 ) {
     val isCpuTurn: Boolean get() = result == null && mode == Mode.CPU && turn == Team.B
 
@@ -62,6 +64,7 @@ class GameViewModel : ViewModel() {
 
     /** Delayed actions tied to the current round, cancelled when a new round starts or on returning to the menu. */
     private val roundJobs = mutableListOf<Job>()
+    private val taggedJobs = mutableMapOf<Any, Job>()
 
     init {
         repeatEvery(GAZE_MS) { gazeTick() }
@@ -70,7 +73,19 @@ class GameViewModel : ViewModel() {
 
     fun setMode(mode: Mode) = _state.update { it.copy(mode = mode) }
 
-    fun setDifficulty(difficulty: Difficulty) = _state.update { it.copy(difficulty = difficulty) }
+    /** Bramble has opinions about the difficulty: gleeful at Troll, bored at Easy. */
+    fun setDifficulty(difficulty: Difficulty) {
+        _state.update { it.copy(difficulty = difficulty) }
+        when (difficulty) {
+            Difficulty.HARD -> {
+                say(MENU_B, "heh", BUBBLE_MS)
+                _state.update { it.copy(excitedTroll = MENU_B) }
+                laterReplacing("hop", EXCITED_MS) { _state.update { it.copy(excitedTroll = null) } }
+            }
+            Difficulty.EASY -> say(MENU_B, "meh", BUBBLE_MS)
+            Difficulty.MEDIUM -> Unit
+        }
+    }
 
     fun start() {
         _state.update { it.copy(screen = Screen.GAME, scores = Scores()) }
@@ -173,27 +188,36 @@ class GameViewModel : ViewModel() {
     private fun chatter() {
         val s = _state.value
         if (s.stare) return
-        val me = actors().filterNot { s.isFallen(it.team) }.randomOrNull() ?: return
+        // Fallen trolls included: they keep grumbling from the dirt.
+        val me = actors().randomOrNull() ?: return
         say(me.key, listOf("bleh", "meh").random(), BUBBLE_MS)
     }
 
     private fun say(key: Int, text: String, ms: Long) {
         _state.update { it.copy(bubbles = it.bubbles + (key to text)) }
-        later(ms) { _state.update { it.copy(bubbles = it.bubbles - key) } }
+        laterReplacing("bubble" to key, ms) { _state.update { it.copy(bubbles = it.bubbles - key) } }
     }
 
-    private fun later(ms: Long, block: () -> Unit) {
+    private fun later(ms: Long, block: () -> Unit): Job {
         val job = viewModelScope.launch {
             delay(ms)
             block()
         }
         roundJobs += job
         job.invokeOnCompletion { roundJobs -= job }
+        return job
+    }
+
+    /** Like [later], but replaces any pending job with the same [tag], so a newer bubble or hop isn't cut short. */
+    private fun laterReplacing(tag: Any, ms: Long, block: () -> Unit) {
+        taggedJobs.remove(tag)?.cancel()
+        taggedJobs[tag] = later(ms, block)
     }
 
     private fun clearLater() {
         roundJobs.toList().forEach { it.cancel() }
         roundJobs.clear()
+        taggedJobs.clear()
     }
 
     private fun repeatEvery(ms: Long, block: () -> Unit) {
@@ -210,6 +234,7 @@ class GameViewModel : ViewModel() {
         const val CHATTER_MS = 5000L
         const val CPU_DELAY_MS = 650L
         const val BUBBLE_MS = 1800L
+        const val EXCITED_MS = 1200L
         const val DRAW_MEH_DELAY_MS = 350L
         const val DRAW_STARE_MS = 2600L
         const val SHEET_DELAY_WIN_MS = 1600L

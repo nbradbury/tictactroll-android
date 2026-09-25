@@ -169,7 +169,7 @@ fun Troll(
 
 /** A speech bubble centered horizontally at the top of its parent, [lift] above the top edge. */
 @Composable
-fun BoxScope.SpeechBubble(text: String, fontSize: Int, lift: Dp) {
+fun BoxScope.SpeechBubble(text: String, fontSize: Int, lift: Dp, modifier: Modifier = Modifier) {
     val scale = remember { Animatable(0.4f) }
     LaunchedEffect(Unit) { scale.animateTo(1f, spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium)) }
     BasicText(
@@ -179,6 +179,7 @@ fun BoxScope.SpeechBubble(text: String, fontSize: Int, lift: Dp) {
         modifier = Modifier
             .align(Alignment.TopCenter)
             .offset(y = -lift)
+            .then(modifier)
             .graphicsLayer {
                 scaleX = scale.value
                 scaleY = scale.value

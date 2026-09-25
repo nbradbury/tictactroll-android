@@ -208,7 +208,7 @@ private fun MenuTroll(state: GameState, team: Team, key: Int, index: Int) {
     Box(Modifier.size(140.dp, 170.dp)) {
         Troll(
             team = team,
-            mood = Mood.IDLE,
+            mood = if (state.excitedTroll == key) Mood.HOP else Mood.IDLE,
             gaze = state.gaze[key] ?: 0,
             index = index,
             shadowHeight = 14.dp,

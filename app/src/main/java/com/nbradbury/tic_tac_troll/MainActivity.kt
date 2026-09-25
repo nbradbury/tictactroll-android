@@ -24,6 +24,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nbradbury.tic_tac_troll.game.GameViewModel
 import com.nbradbury.tic_tac_troll.game.Screen
 import com.nbradbury.tic_tac_troll.ui.BackgroundMusic
+import com.nbradbury.tic_tac_troll.ui.GameHaptics
 import com.nbradbury.tic_tac_troll.ui.GameScreen
 import com.nbradbury.tic_tac_troll.ui.GameSounds
 import com.nbradbury.tic_tac_troll.ui.MenuScreen
@@ -49,6 +50,7 @@ fun TicTacTrollApp(vm: GameViewModel = viewModel()) {
     var soundOn by remember { mutableStateOf(prefs.getBoolean(KEY_SOUND, true)) }
     BackgroundMusic(R.raw.where_the_trolls_tread, enabled = soundOn)
     GameSounds(state, enabled = soundOn)
+    GameHaptics(state)
     Box(Modifier.fillMaxSize().backdrop()) {
         when (state.screen) {
             Screen.MENU -> MenuScreen(

@@ -13,11 +13,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -41,6 +43,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.dropShadow
@@ -58,6 +61,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -78,11 +82,13 @@ import com.nbradbury.tic_tac_troll.ui.theme.dirt
 import com.nbradbury.tic_tac_troll.ui.theme.lilita
 import com.nbradbury.tic_tac_troll.ui.theme.mono
 import com.nbradbury.tic_tac_troll.ui.theme.sans
+import kotlin.math.roundToInt
 
 private const val CELL = 108
 private const val STEP = 118 // cell + gap
 private const val BOARD = 344
 private val TOP_BAR_BUTTON_BAND = 96.dp
+private val PIECE_PADDING = PaddingValues(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 8.dp)
 
 @Composable
 fun GameScreen(
@@ -264,6 +270,8 @@ private fun Board(state: GameState, onCell: (Int) -> Unit, modifier: Modifier = 
             val col = i % COLUMNS
             val fallen = team != null && state.isFallen(team)
             val clickable = team == null && state.acceptsMove
+            val interaction = remember { MutableInteractionSource() }
+            val pressed by interaction.collectIsPressedAsState()
             val glow by animateColorAsState(
                 if (result?.winner != null && i in result.line) result.winner.color else Color.Transparent,
                 tween(300),
@@ -274,15 +282,19 @@ private fun Board(state: GameState, onCell: (Int) -> Unit, modifier: Modifier = 
                     .size(CELL.dp)
                     .zIndex(if (fallen) 10f + (2 - row) else 1f)
                     .crate(glow)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        enabled = clickable,
-                    ) { onCell(i) },
+                    .clickable(interactionSource = interaction, indication = null, enabled = clickable) { onCell(i) },
             ) {
                 if (team != null) {
                     Piece(state, team, i, fallen)
-                    state.bubbles[i]?.let { SpeechBubble(it, fontSize = 18, lift = 22.dp) }
+                } else if (pressed && clickable) {
+                    // A ghost of the troll about to land; sliding off the crate cancels the move.
+                    Image(
+                        painterResource(state.turn.image),
+                        contentDescription = null,
+                        contentScale = ContentScale.Fit,
+                        alignment = Alignment.BottomCenter,
+                        modifier = Modifier.matchParentSize().padding(PIECE_PADDING).alpha(0.35f),
+                    )
                 }
             }
         }
@@ -316,6 +328,7 @@ private fun BoxScope.Piece(state: GameState, team: Team, index: Int, fallen: Boo
         2 -> 1
         else -> if (row % 2 == 1) 1 else -1
     }
+    val drop = (2 - row) * STEP + 44
     val density = LocalDensity.current.density
     Troll(
         team = team,
@@ -326,13 +339,27 @@ private fun BoxScope.Piece(state: GameState, team: Team, index: Int, fallen: Boo
         grounded = !fallen,
         modifier = Modifier
             .matchParentSize()
-            .padding(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 8.dp)
+            .padding(PIECE_PADDING)
             .graphicsLayer {
-                translationY = fall.value * ((2 - row) * STEP + 44) * density
+                translationY = fall.value * drop * density
                 rotationZ = fall.value * direction * 90f
                 transformOrigin = TransformOrigin(0.5f, 1f)
             },
     )
+    state.bubbles[index]?.let { text ->
+        // Follows a fallen troll down: sideways toward where its head lies, and down into the dirt.
+        SpeechBubble(
+            text,
+            fontSize = 18,
+            lift = 22.dp,
+            Modifier.offset {
+                IntOffset(
+                    (fall.value * direction * 40.dp.toPx()).roundToInt(),
+                    (fall.value * (drop + 50).dp.toPx()).roundToInt(),
+                )
+            },
+        )
+    }
 }
 
 @Composable
