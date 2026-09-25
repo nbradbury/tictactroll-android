@@ -65,9 +65,8 @@ enum class Mood { IDLE, HOP, SHRUG }
 private val Bottom = TransformOrigin(0.5f, 1f)
 
 /**
- * An animated troll that pops in on first composition, breathes, tilts its head toward [gaze] (-1, 0, 1),
- * and hops or shrugs depending on [mood]. [index] staggers the breathing and hopping between trolls.
- * The ground shadow fades out when the troll isn't [grounded].
+ * A troll that pops in when first composed, breathes, tilts its head toward [gaze] (-1, 0 or 1), and hops or shrugs
+ * per [mood]. [index] staggers the animations so trolls don't move in sync; the shadow fades when not [grounded].
  */
 @Composable
 fun Troll(
@@ -185,7 +184,10 @@ fun BoxScope.SpeechBubble(text: String, fontSize: Int, lift: Dp) {
                 scaleY = scale.value
                 alpha = ((scale.value - 0.4f) / 0.6f).coerceIn(0f, 1f)
             }
-            .dropShadow(RoundedCornerShape(50), Shadow(radius = 0.dp, color = Color.Black.copy(alpha = 0.25f), offset = DpOffset(0.dp, 3.dp)))
+            .dropShadow(
+                RoundedCornerShape(50),
+                Shadow(radius = 0.dp, color = Color.Black.copy(alpha = 0.25f), offset = DpOffset(0.dp, 3.dp)),
+            )
             .background(BubbleCream, RoundedCornerShape(50))
             .padding(horizontal = 12.dp, vertical = 4.dp),
     )

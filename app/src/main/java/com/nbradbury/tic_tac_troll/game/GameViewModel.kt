@@ -48,6 +48,9 @@ data class GameState(
 ) {
     val isCpuTurn: Boolean get() = result == null && mode == Mode.CPU && turn == Team.B
 
+    /** Whether a tap on an empty cell should place a troll right now. */
+    val acceptsMove: Boolean get() = result == null && !locked && !isCpuTurn
+
     fun isFallen(team: Team): Boolean = result?.winner.let { it != null && it != team }
 }
 
@@ -90,7 +93,7 @@ class GameViewModel : ViewModel() {
 
     fun play(index: Int) {
         val s = _state.value
-        if (s.result != null || s.board[index] != null || s.locked || s.isCpuTurn) return
+        if (!s.acceptsMove || s.board[index] != null) return
         place(index)
     }
 
@@ -118,11 +121,17 @@ class GameViewModel : ViewModel() {
     private fun endGame(result: GameResult) {
         _state.update { it.copy(scores = it.scores.add(result.winner)) }
         if (result.isDraw) {
+            // A chatter bubble's pending removal would otherwise cut its troll's "meh" short. The chorus replaces
+            // any showing bubbles and the stare clears them all, so nothing is left stranded.
+            clearLater()
             _state.update { s -> s.copy(stare = true, gaze = s.board.indices.associateWith { 0 }) }
-            later(350) { _state.update { s -> s.copy(bubbles = s.board.indices.associateWith { "meh" }) } }
-            later(2600) { _state.update { it.copy(bubbles = emptyMap(), stare = false) } }
+            later(DRAW_MEH_DELAY_MS) {
+                _state.update { s -> s.copy(bubbles = s.board.indices.associateWith { "meh" }) }
+            }
+            later(DRAW_STARE_MS) { _state.update { it.copy(bubbles = emptyMap(), stare = false) } }
         }
-        later(if (result.isDraw) 2000 else 1600) { _state.update { it.copy(showSheet = true) } }
+        val sheetDelay = if (result.isDraw) SHEET_DELAY_DRAW_MS else SHEET_DELAY_WIN_MS
+        later(sheetDelay) { _state.update { it.copy(showSheet = true) } }
     }
 
     private fun newRound(starter: Team) {
@@ -139,10 +148,10 @@ class GameViewModel : ViewModel() {
     private fun actors(): List<Actor> {
         val s = _state.value
         if (s.screen == Screen.MENU) return listOf(Actor(MENU_A, 0, Team.A), Actor(MENU_B, 1, Team.B))
-        return s.board.mapIndexedNotNull { i, team -> team?.let { Actor(i, i % 3, it) } }
+        return s.board.mapIndexedNotNull { i, team -> team?.let { Actor(i, i % COLUMNS, it) } }
     }
 
-    /** Makes one or two trolls glance at a neighbor, glance randomly, or look straight ahead. */
+    /** One or two trolls glance at a neighbor, glance anywhere, or look straight ahead, by cumulative roll. */
     private fun gazeTick() {
         if (_state.value.stare) return
         val actors = actors()
@@ -153,8 +162,8 @@ class GameViewModel : ViewModel() {
             val others = actors.filter { it.key != me.key }
             val roll = Random.nextFloat()
             gaze[me.key] = when {
-                others.isNotEmpty() && roll < 0.6f -> (others.random().col - me.col).sign
-                roll < 0.85f -> Random.nextInt(-1, 2)
+                others.isNotEmpty() && roll < GLANCE_AT_NEIGHBOR_ROLL -> (others.random().col - me.col).sign
+                roll < GLANCE_ANYWHERE_ROLL -> Random.nextInt(-1, 2)
                 else -> 0
             }
         }
@@ -165,7 +174,7 @@ class GameViewModel : ViewModel() {
         val s = _state.value
         if (s.stare) return
         val me = actors().filterNot { s.isFallen(it.team) }.randomOrNull() ?: return
-        say(me.key, listOf("bleh", "meh").random(), 1800)
+        say(me.key, listOf("bleh", "meh").random(), BUBBLE_MS)
     }
 
     private fun say(key: Int, text: String, ms: Long) {
@@ -200,5 +209,12 @@ class GameViewModel : ViewModel() {
         const val GAZE_MS = 750L
         const val CHATTER_MS = 5000L
         const val CPU_DELAY_MS = 650L
+        const val BUBBLE_MS = 1800L
+        const val DRAW_MEH_DELAY_MS = 350L
+        const val DRAW_STARE_MS = 2600L
+        const val SHEET_DELAY_WIN_MS = 1600L
+        const val SHEET_DELAY_DRAW_MS = 2000L
+        const val GLANCE_AT_NEIGHBOR_ROLL = 0.6f
+        const val GLANCE_ANYWHERE_ROLL = 0.85f
     }
 }

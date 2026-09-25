@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.nbradbury.tic_tac_troll.R
+import com.nbradbury.tic_tac_troll.game.COLUMNS
 import com.nbradbury.tic_tac_troll.game.GameState
 import com.nbradbury.tic_tac_troll.game.Mode
 import com.nbradbury.tic_tac_troll.game.Team
@@ -232,10 +233,10 @@ private fun Board(state: GameState, onCell: (Int) -> Unit, modifier: Modifier = 
                 .drawBehind { drawRect(Grass, size = size.copy(height = 3.dp.toPx())) }
         )
         state.board.forEachIndexed { i, team ->
-            val row = i / 3
-            val col = i % 3
+            val row = i / COLUMNS
+            val col = i % COLUMNS
             val fallen = team != null && state.isFallen(team)
-            val clickable = team == null && result == null && !state.locked && !state.isCpuTurn
+            val clickable = team == null && state.acceptsMove
             val glow by animateColorAsState(
                 if (result?.winner != null && i in result.line) result.winner.color else Color.Transparent,
                 tween(300),
@@ -264,8 +265,8 @@ private fun Board(state: GameState, onCell: (Int) -> Unit, modifier: Modifier = 
 /** A troll on the board, which topples off its crate onto the dirt when its team loses. */
 @Composable
 private fun BoxScope.Piece(state: GameState, team: Team, index: Int, fallen: Boolean) {
-    val row = index / 3
-    val col = index % 3
+    val row = index / COLUMNS
+    val col = index % COLUMNS
     val result = state.result
     val mood = when {
         result?.winner == team -> Mood.HOP
@@ -314,7 +315,10 @@ private fun ResultSheet(winner: Team?, onMenu: () -> Unit, onRematch: () -> Unit
         verticalArrangement = Arrangement.spacedBy(6.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .dropShadow(shape, Shadow(radius = 30.dp, color = Color.Black.copy(alpha = 0.4f), offset = DpOffset(0.dp, (-10).dp)))
+            .dropShadow(
+                shape,
+                Shadow(radius = 30.dp, color = Color.Black.copy(alpha = 0.4f), offset = DpOffset(0.dp, (-10).dp)),
+            )
             .background(SheetBackground, shape)
             // Swallow taps so they don't reach the board underneath.
             .clickable(remember { MutableInteractionSource() }, indication = null) {}
@@ -322,7 +326,8 @@ private fun ResultSheet(winner: Team?, onMenu: () -> Unit, onRematch: () -> Unit
             .padding(start = 20.dp, end = 20.dp, top = 22.dp, bottom = 20.dp),
     ) {
         BasicText(
-            if (winner != null) stringResource(R.string.result_wins, winner.displayName()) else stringResource(R.string.result_draw),
+            if (winner != null) stringResource(R.string.result_wins, winner.displayName())
+            else stringResource(R.string.result_draw),
             style = dirt(34),
         )
         BasicText(

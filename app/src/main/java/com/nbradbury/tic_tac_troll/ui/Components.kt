@@ -61,7 +61,7 @@ fun TitleText(style: TextStyle, modifier: Modifier = Modifier, separator: String
     BasicText(text, modifier, style)
 }
 
-/** The chunky accent button with a hard bottom shadow that sinks when pressed. */
+/** The accent button with a hard bottom shadow that sinks when pressed. */
 @Composable
 fun ChunkyButton(
     text: String,

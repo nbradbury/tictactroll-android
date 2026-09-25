@@ -19,7 +19,7 @@ class GameLogicTest {
     @Test
     fun `judge finds every line`() {
         for (line in LINES) {
-            val b = List(9) { if (it in line) B else null }
+            val b = List(CELLS) { if (it in line) B else null }
             assertEquals(GameResult(B, line), judge(b))
         }
     }

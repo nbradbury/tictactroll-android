@@ -24,7 +24,6 @@ fun Modifier.crate(glow: Color) = drawBehind {
     val radius = CornerRadius(4.dp.toPx())
     val border = 6.dp.toPx()
 
-    // Soft drop shadow, then the hard "ledge" shadow.
     drawIntoCanvas { canvas ->
         val paint = android.graphics.Paint().apply {
             color = Color.Black.copy(alpha = 0.4f).toArgb()
@@ -54,7 +53,12 @@ fun Modifier.crate(glow: Color) = drawBehind {
             strokeWidth = inner * 0.1f * 1.414f,
         )
         drawRect(Color(0x14FFE6BE), Offset(border, border), Size(inner, 3.dp.toPx()))
-        drawRect(Color.Black.copy(alpha = 0.25f), Offset(border, border), Size(inner, inner), style = Stroke(1.dp.toPx()))
+        drawRect(
+            Color.Black.copy(alpha = 0.25f),
+            Offset(border, border),
+            Size(inner, inner),
+            style = Stroke(1.dp.toPx()),
+        )
     }
 
     if (glow.alpha > 0f) {

@@ -155,7 +155,10 @@ private fun MenuContent(
                 }
             }
             if (state.mode == Mode.CPU) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
                     BasicText(
                         stringResource(R.string.cpu_skill),
                         style = sans(13, color = MutedLabel),

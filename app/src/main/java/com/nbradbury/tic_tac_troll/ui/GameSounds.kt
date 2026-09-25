@@ -16,10 +16,7 @@ import com.nbradbury.tic_tac_troll.game.Mode
 import com.nbradbury.tic_tac_troll.game.Team
 import kotlin.random.Random
 
-/**
- * Plays a thunk as each troll lands, voices each new speech bubble, and plays a stinger when a game ends, while
- * [enabled]. Against the CPU a Bramble win is a loss for the player, so it gets the sad trombone instead.
- */
+/** Game sounds while [enabled]. Against the CPU a Bramble win is the player's loss, so it gets the trombone. */
 @Composable
 fun GameSounds(state: GameState, enabled: Boolean) {
     val context = LocalContext.current
@@ -28,10 +25,7 @@ fun GameSounds(state: GameState, enabled: Boolean) {
     LaunchedEffect(state.board, state.bubbles, state.result) { sounds.onState(state, enabled) }
 }
 
-/**
- * Plays whatever changed since the last [GameState]. Keeps tracking while muted, and records the first state it sees
- * without playing, so unmuting or recreating the activity doesn't replay anything already on screen.
- */
+/** Records the first state silently and keeps tracking while muted, so nothing on screen replays later. */
 private class SoundPlayer(context: Context) {
     private val pool = SoundPool.Builder()
         .setMaxStreams(4)
@@ -58,29 +52,37 @@ private class SoundPlayer(context: Context) {
         val previous = last
         last = state
         if (previous == null || !enabled) return
+        playLandings(previous, state)
+        playVoices(previous, state)
+        playStinger(previous, state)
+    }
 
+    private fun playLandings(previous: GameState, state: GameState) {
         state.board.forEachIndexed { i, team ->
             if (team != null && previous.board[i] == null) {
                 // Gorp lands a little lighter than Bramble.
                 play(thunk, if (team == Team.A) 1.12f else 0.88f)
             }
         }
+    }
 
+    private fun playVoices(previous: GameState, state: GameState) {
         // Once per team and word, so the draw chorus doesn't stack 9 deep.
         state.bubbles
             .filter { (key, text) -> previous.bubbles[key] != text }
             .mapNotNullTo(mutableSetOf()) { (key, text) -> teamOf(state, key)?.let { it to text } }
             .forEach { voice -> voices[voice]?.let { play(it) } }
+    }
 
+    private fun playStinger(previous: GameState, state: GameState) {
         val result = state.result
-        if (previous.result == null && result != null) {
-            val stinger = when {
-                result.isDraw -> tie
-                state.mode == Mode.CPU && result.winner == Team.B -> wompWomp
-                else -> fanfare
-            }
-            play(stinger, varyPitch = false)
+        if (previous.result != null || result == null) return
+        val stinger = when {
+            result.isDraw -> tie
+            state.mode == Mode.CPU && result.winner == Team.B -> wompWomp
+            else -> fanfare
         }
+        play(stinger, varyPitch = false)
     }
 
     private fun teamOf(state: GameState, key: Int): Team? = when (key) {

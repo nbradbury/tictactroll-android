@@ -17,13 +17,20 @@ data class GameResult(val winner: Team?, val line: List<Int>) {
     val isDraw: Boolean get() = winner == null
 }
 
+@Suppress("MagicNumber") // Board indices.
 val LINES = listOf(
     listOf(0, 1, 2), listOf(3, 4, 5), listOf(6, 7, 8),
     listOf(0, 3, 6), listOf(1, 4, 7), listOf(2, 5, 8),
     listOf(0, 4, 8), listOf(2, 4, 6),
 )
 
-val EMPTY_BOARD: Board = List(9) { null }
+const val COLUMNS = 3
+const val CELLS = COLUMNS * COLUMNS
+private const val CENTER = 4
+private const val WIN_SCORE = 10
+private const val MEDIUM_RANDOM_MOVE_CHANCE = 0.2f
+
+val EMPTY_BOARD: Board = List(CELLS) { null }
 
 fun judge(board: Board): GameResult? {
     for (line in LINES) {
@@ -46,13 +53,13 @@ fun findLine(board: Board, who: Team): Int {
 private fun minimax(board: MutableList<Team?>, turn: Team, me: Team, depth: Int): Int {
     judge(board)?.let { r ->
         return when (r.winner) {
-            me -> 10 - depth
+            me -> WIN_SCORE - depth
             null -> 0
-            else -> depth - 10
+            else -> depth - WIN_SCORE
         }
     }
     var best = if (turn == me) Int.MIN_VALUE else Int.MAX_VALUE
-    for (i in 0 until 9) {
+    for (i in board.indices) {
         if (board[i] != null) continue
         board[i] = turn
         val score = minimax(board, turn.other, me, depth + 1)
@@ -70,7 +77,9 @@ fun cpuPick(board: Board, difficulty: Difficulty, random: Random = Random, me: T
         Difficulty.MEDIUM -> {
             var move = findLine(board, me)
             if (move < 0) move = findLine(board, me.other)
-            if (move < 0 || random.nextFloat() < 0.2f) move = if (board[4] != null) free.random(random) else 4
+            if (move < 0 || random.nextFloat() < MEDIUM_RANDOM_MOVE_CHANCE) {
+                move = if (board[CENTER] != null) free.random(random) else CENTER
+            }
             move
         }
         Difficulty.HARD -> {
