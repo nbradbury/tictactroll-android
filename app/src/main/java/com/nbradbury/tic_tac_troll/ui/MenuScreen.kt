@@ -27,8 +27,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -40,6 +42,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
@@ -101,7 +104,9 @@ private fun MenuContent(
     ) {
         BasicText(
             stringResource(R.string.tagline).uppercase(),
-            style = mono(12, Eyebrow).copy(letterSpacing = 0.2.em),
+            style = mono(12, Eyebrow).copy(letterSpacing = 0.2.em, textAlign = TextAlign.Center),
+            // Clears the sound toggle in the corner; large text wraps instead of running under it.
+            modifier = Modifier.padding(horizontal = 48.dp),
         )
         val shadowOffset = with(LocalDensity.current) { 5.dp.toPx() }
         TitleText(
@@ -162,7 +167,8 @@ private fun MenuContent(
                     BasicText(
                         stringResource(R.string.cpu_skill),
                         style = sans(13, color = MutedLabel),
-                        modifier = Modifier.width(72.dp),
+                        maxLines = 1,
+                        modifier = Modifier.widthIn(min = 72.dp),
                     )
                     Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         listOf(
@@ -235,7 +241,14 @@ private fun SelectableButton(
             .then(if (outlined) Modifier.border(1.5.dp, if (selected) Cream else Outline, shape) else Modifier)
             .clickable(onClick = onClick),
     ) {
-        BasicText(text, style = sans(fontSize, weight, if (selected) OnAccent else Ink))
+        BasicText(
+            text,
+            style = sans(fontSize, weight, if (selected) OnAccent else Ink),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = fontSize.sp),
+            modifier = Modifier.padding(horizontal = 6.dp),
+        )
     }
 }
 

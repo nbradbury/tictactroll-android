@@ -23,15 +23,18 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -52,8 +55,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.nbradbury.tic_tac_troll.R
 import com.nbradbury.tic_tac_troll.game.COLUMNS
@@ -76,6 +82,7 @@ import com.nbradbury.tic_tac_troll.ui.theme.sans
 private const val CELL = 108
 private const val STEP = 118 // cell + gap
 private const val BOARD = 344
+private val TOP_BAR_BUTTON_BAND = 96.dp
 
 @Composable
 fun GameScreen(
@@ -99,8 +106,8 @@ fun GameScreen(
             ScoreChips(state, Modifier.padding(top = 14.dp))
             BasicText(
                 statusText(state),
-                style = sans(17),
-                modifier = Modifier.padding(top = 22.dp).height(28.dp),
+                style = sans(17).copy(textAlign = TextAlign.Center),
+                modifier = Modifier.padding(top = 22.dp).heightIn(min = 28.dp),
             )
             Board(state, onCell, Modifier.padding(top = 26.dp))
         }
@@ -141,18 +148,29 @@ private fun TopBar(onMenu: () -> Unit, onRestart: () -> Unit) {
         ) {
             BasicText("‹", style = sans(22, FontWeight.Bold))
         }
-        TitleText(dirt(21), Modifier.align(Alignment.Center))
+        // Reserve a band for the buttons on each side so the centered title can't run into them.
+        TitleText(
+            dirt(21),
+            Modifier.align(Alignment.Center).padding(horizontal = TOP_BAR_BUTTON_BAND + 8.dp),
+            autoSize = TextAutoSize.StepBased(minFontSize = 12.sp, maxFontSize = 21.sp),
+        )
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .height(48.dp)
+                .widthIn(max = TOP_BAR_BUTTON_BAND)
                 .clip(CircleShape)
                 .background(Scrim)
                 .clickable(onClick = onRestart)
                 .padding(horizontal = 14.dp),
         ) {
-            BasicText(stringResource(R.string.restart), style = sans(13))
+            BasicText(
+                stringResource(R.string.restart),
+                style = sans(13),
+                maxLines = 1,
+                autoSize = TextAutoSize.StepBased(minFontSize = 9.sp, maxFontSize = 13.sp),
+            )
         }
     }
 }
@@ -210,8 +228,17 @@ private fun androidx.compose.foundation.layout.RowScope.ScoreChip(
             )
         }
         if (!mirrored) avatar()
-        Column(horizontalAlignment = if (mirrored) Alignment.End else Alignment.Start) {
-            BasicText(name, style = sans(12, color = Muted), maxLines = 1)
+        Column(
+            horizontalAlignment = if (mirrored) Alignment.End else Alignment.Start,
+            modifier = Modifier.weight(1f, fill = false),
+        ) {
+            BasicText(
+                name,
+                style = sans(12, color = Muted),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                autoSize = TextAutoSize.StepBased(minFontSize = 9.sp, maxFontSize = 12.sp),
+            )
             BasicText(score.toString(), style = lilita(26))
         }
         if (mirrored) avatar()

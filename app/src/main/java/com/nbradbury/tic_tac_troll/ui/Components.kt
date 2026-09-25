@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -52,13 +53,18 @@ fun Modifier.backdrop() = drawBehind {
 
 /** "Tic Tac Troll" with "Troll" in the accent color. */
 @Composable
-fun TitleText(style: TextStyle, modifier: Modifier = Modifier, separator: String = " ") {
+fun TitleText(
+    style: TextStyle,
+    modifier: Modifier = Modifier,
+    separator: String = " ",
+    autoSize: TextAutoSize? = null,
+) {
     val text = buildAnnotatedString {
         append(stringResource(R.string.title_tic_tac))
         append(separator)
         withStyle(SpanStyle(color = Accent)) { append(stringResource(R.string.title_troll)) }
     }
-    BasicText(text, modifier, style)
+    BasicText(text, modifier, style, maxLines = if (autoSize != null) 1 else Int.MAX_VALUE, autoSize = autoSize)
 }
 
 /** The accent button with a hard bottom shadow that sinks when pressed. */
