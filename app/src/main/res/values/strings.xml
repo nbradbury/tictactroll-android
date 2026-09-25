@@ -7,8 +7,6 @@
     <string name="gorp">Gorp</string>
     <string name="bramble">Bramble</string>
     <string name="bramble_cpu">Bramble (CPU)</string>
-    <string name="gorp_blue">Gorp · blue</string>
-    <string name="bramble_red">Bramble · red</string>
     <string name="mode_pvp">2 players</string>
     <string name="mode_cpu">vs CPU</string>
     <string name="cpu_skill">CPU skill</string>

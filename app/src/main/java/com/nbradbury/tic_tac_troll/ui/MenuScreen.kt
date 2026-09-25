@@ -122,9 +122,14 @@ private fun MenuContent(
             MenuTroll(state, Team.A, MENU_A, 0)
             MenuTroll(state, Team.B, MENU_B, 1)
         }
-        Row(Modifier.width(300.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-            BasicText(stringResource(R.string.gorp_blue), style = sans(13, color = Muted))
-            BasicText(stringResource(R.string.bramble_red), style = sans(13, color = Muted))
+        Row(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+            listOf(Team.A, Team.B).forEach { team ->
+                BasicText(
+                    team.displayName(),
+                    style = sans(13, color = Muted).copy(textAlign = TextAlign.Center),
+                    modifier = Modifier.width(140.dp),
+                )
+            }
         }
 
         Spacer(Modifier.weight(1f))
