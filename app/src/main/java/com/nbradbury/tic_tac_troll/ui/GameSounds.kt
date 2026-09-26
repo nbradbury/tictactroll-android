@@ -22,7 +22,7 @@ fun GameSounds(state: GameState, enabled: Boolean) {
     val context = LocalContext.current
     val sounds = remember { SoundPlayer(context) }
     DisposableEffect(sounds) { onDispose { sounds.release() } }
-    LaunchedEffect(state.board, state.bubbles, state.result) { sounds.onState(state, enabled) }
+    LaunchedEffect(state.board, state.bubbles, state.result, state.popped) { sounds.onState(state, enabled) }
 }
 
 /** Records the first state silently and keeps tracking while muted, so nothing on screen replays later. */
@@ -55,6 +55,7 @@ private class SoundPlayer(context: Context) {
         if (previous == null || !enabled) return
         playLandings(previous, state)
         playDeparture(previous, state)
+        playFallenPops(previous, state)
         playVoices(previous, state)
         playStinger(previous, state)
     }
@@ -74,6 +75,13 @@ private class SoundPlayer(context: Context) {
         val team = previous.board[departed] ?: return
         // Gorp pops a little higher than Bramble.
         if (state.board[departed] == null) play(pop, if (team == Team.A) 1.1f else 0.9f)
+    }
+
+    /** A pop as each losing troll bursts after landing in the dirt. */
+    private fun playFallenPops(previous: GameState, state: GameState) {
+        (state.popped - previous.popped).forEach { cell ->
+            state.board[cell]?.let { team -> play(pop, if (team == Team.A) 1.1f else 0.9f) }
+        }
     }
 
     private fun playVoices(previous: GameState, state: GameState) {

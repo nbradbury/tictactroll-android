@@ -12,7 +12,7 @@
 
 - **Play the CPU or a friend.** Three CPU skill levels: Easy (random), Medium (wins or blocks when it can, mostly), and Troll (minimax; never loses in classic games). Two-player mode is pass-and-play.
 - **Bored trolls mode.** Each player keeps at most three trolls. Play a fourth and your oldest gets bored and pops like a bubble, unless that fourth completes a row with it, which still wins. Games can't end in a draw. The troll about to leave is dimmed.
-- **Trolls with attitude.** They breathe, glance at their neighbors, turn to look at each new arrival, and grumble every few seconds, even after falling in the dirt. Block a winning line and the blocking troll says "bleh". Winners hop, losers fall off the board, and a draw gets a collective stare and a "meh" from everyone.
+- **Trolls with attitude.** They breathe, glance at their neighbors, turn to look at each new arrival, and grumble every few seconds. Block a winning line and the blocking troll says "bleh". Winners hop, losers topple into the dirt and pop, and a draw gets a collective stare and a "meh" from everyone.
 - **Sound.** Background music, a thunk as each troll lands, and an ending sound for every outcome: a fanfare for a win, a sad trombone for losing to the CPU, and a brass shrug for a tie. A toggle on the menu mutes everything, and the setting is remembered.
 - **Feel.** Haptic ticks as trolls land, a ghost preview while your finger is on a crate, and Bramble has opinions about the difficulty you pick.
 - **Accessible.** Works with TalkBack: every crate is labeled, moves (including the CPU's) are announced, and the layout holds up at large font sizes.

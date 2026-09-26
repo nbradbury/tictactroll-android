@@ -50,6 +50,8 @@ data class GameState(
     /** True during the draw sequence, when every troll stares at the player. */
     val stare: Boolean = false,
     val locked: Boolean = false,
+    /** Losing trolls that have popped after landing in the dirt. */
+    val popped: Set<Int> = emptySet(),
     /** A menu troll that's briefly hopping with excitement. */
     val excitedTroll: Int? = null,
 ) {
@@ -108,10 +110,19 @@ class GameViewModel(initialRules: Rules = Rules.CLASSIC) : ViewModel() {
         clearLater()
         _state.update {
             it.copy(
-                screen = Screen.MENU, board = EMPTY_BOARD, history = emptyList(), departed = null, result = null,
-                showSheet = false,
+                screen = Screen.MENU, board = EMPTY_BOARD, history = emptyList(), departed = null, popped = emptySet(),
+                result = null, showSheet = false,
                 bubbles = emptyMap(), gaze = emptyMap(), stare = false, locked = false,
             )
+        }
+    }
+
+    /** Called by the board once a losing troll has landed in the dirt, so it pops. */
+    fun popFallen(index: Int) {
+        val s = _state.value
+        val team = s.board[index] ?: return
+        if (s.isFallen(team) && index !in s.popped) {
+            _state.update { it.copy(popped = it.popped + index, bubbles = it.bubbles - index) }
         }
     }
 
@@ -184,7 +195,8 @@ class GameViewModel(initialRules: Rules = Rules.CLASSIC) : ViewModel() {
         clearLater()
         _state.update {
             it.copy(
-                board = EMPTY_BOARD, history = emptyList(), departed = null, turn = starter, starter = starter,
+                board = EMPTY_BOARD, history = emptyList(), departed = null, popped = emptySet(), turn = starter,
+                starter = starter,
                 result = null, showSheet = false, bubbles = emptyMap(), stare = false, locked = false,
                 gaze = emptyMap(),
             )
@@ -220,8 +232,8 @@ class GameViewModel(initialRules: Rules = Rules.CLASSIC) : ViewModel() {
     private fun chatter() {
         val s = _state.value
         if (s.stare) return
-        // Fallen trolls included: they keep grumbling from the dirt.
-        val me = actors().randomOrNull() ?: return
+        // Popped trolls are gone, so they've nothing left to say.
+        val me = actors().filterNot { it.key in s.popped }.randomOrNull() ?: return
         say(me.key, listOf("bleh", "meh").random(), BUBBLE_MS)
     }
 

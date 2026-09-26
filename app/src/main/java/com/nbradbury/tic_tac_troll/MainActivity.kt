@@ -80,6 +80,7 @@ fun TicTacTrollApp() {
                 GameScreen(
                     state = state,
                     onCell = vm::play,
+                    onFallenLanded = vm::popFallen,
                     onMenu = vm::toMenu,
                     onRestart = vm::restart,
                     onRematch = vm::rematch,

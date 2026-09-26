@@ -113,11 +113,13 @@ private val BORED_EXIT = scaleOut(tween(POP_SWELL_MS, easing = FastOutLinearInEa
 private const val POP_SWELL_MS = 140
 private const val POP_BURST_MS = 380
 private const val POP_DROPLETS = 8
+private const val POP_AFTER_LANDING_MS = 250L
 
 @Composable
 fun GameScreen(
     state: GameState,
     onCell: (Int) -> Unit,
+    onFallenLanded: (Int) -> Unit,
     onMenu: () -> Unit,
     onRestart: () -> Unit,
     onRematch: () -> Unit,
@@ -148,7 +150,7 @@ fun GameScreen(
                         liveRegion = LiveRegionMode.Polite
                     },
             )
-            Board(state, onCell, Modifier.padding(top = 26.dp))
+            Board(state, onCell, onFallenLanded, Modifier.padding(top = 26.dp))
         }
 
         AnimatedVisibility(
@@ -299,7 +301,12 @@ private fun androidx.compose.foundation.layout.RowScope.ScoreChip(
 }
 
 @Composable
-private fun Board(state: GameState, onCell: (Int) -> Unit, modifier: Modifier = Modifier) {
+private fun Board(
+    state: GameState,
+    onCell: (Int) -> Unit,
+    onFallenLanded: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val result = state.result
     Box(modifier.size(BOARD.dp)) {
         // The dirt strip the losing trolls topple onto.
@@ -349,7 +356,9 @@ private fun Board(state: GameState, onCell: (Int) -> Unit, modifier: Modifier = 
                     exit = if (state.departed == i) BORED_EXIT else ExitTransition.None,
                     modifier = Modifier.matchParentSize(),
                 ) {
-                    Box(Modifier.fillMaxSize()) { lastTeam[0]?.let { Piece(state, it, i, fallen) } }
+                    Box(Modifier.fillMaxSize()) {
+                        lastTeam[0]?.let { Piece(state, it, i, fallen, onLanded = { onFallenLanded(i) }) }
+                    }
                 }
                 if (state.departed == i) {
                     // Keyed on the move, so each new departure bursts once.
@@ -383,7 +392,7 @@ private fun cellDescription(index: Int, team: Team?, leaving: Boolean): String {
 
 /** The bubble burst where a bored troll was: a ring snapping outward and a spray of [color] droplets, fading. */
 @Composable
-private fun BoxScope.PopBurst(color: Color, trigger: Any) {
+private fun BoxScope.PopBurst(color: Color, trigger: Any, offset: DpOffset = DpOffset.Zero) {
     val progress = remember(trigger) { Animatable(0f) }
     LaunchedEffect(trigger) {
         delay(POP_SWELL_MS - 30L)
@@ -393,7 +402,7 @@ private fun BoxScope.PopBurst(color: Color, trigger: Any) {
         val p = progress.value
         if (p == 0f || p == 1f) return@Canvas
         val fade = 1f - p
-        val center = Offset(size.width / 2, size.height * 0.55f)
+        val center = Offset(size.width / 2 + offset.x.toPx(), size.height * 0.55f + offset.y.toPx())
         val reach = size.minDimension
         drawCircle(
             Cream.copy(alpha = 0.85f * fade),
@@ -413,17 +422,11 @@ private fun BoxScope.PopBurst(color: Color, trigger: Any) {
     }
 }
 
-/** A troll on the board, which topples off its crate onto the dirt when its team loses. */
+/** A troll on the board, which topples off its crate onto the dirt when its team loses, then pops. */
 @Composable
-private fun BoxScope.Piece(state: GameState, team: Team, index: Int, fallen: Boolean) {
+private fun BoxScope.Piece(state: GameState, team: Team, index: Int, fallen: Boolean, onLanded: () -> Unit) {
     val row = index / COLUMNS
     val col = index % COLUMNS
-    val result = state.result
-    val mood = when {
-        result?.winner == team -> Mood.HOP
-        result?.isDraw == true && state.stare -> Mood.SHRUG
-        else -> Mood.IDLE
-    }
     val fall = remember { Animatable(0f) }
     LaunchedEffect(fallen) {
         if (fallen) {
@@ -431,22 +434,25 @@ private fun BoxScope.Piece(state: GameState, team: Team, index: Int, fallen: Boo
                 1f,
                 tween(800, delayMillis = index % 5 * 120 + 250, easing = CubicBezierEasing(0.55f, 0f, 0.75f, 1.2f)),
             )
+            delay(POP_AFTER_LANDING_MS)
+            onLanded()
         } else {
             fall.animateTo(0f, tween(300))
         }
     }
-    val direction = when (col) {
-        0 -> -1
-        2 -> 1
-        else -> if (row % 2 == 1) 1 else -1
-    }
+    val direction = fallDirection(row, col)
     val drop = (2 - row) * STEP + 44
     // Under rolling rules, the troll about to get bored is dimmed as a warning.
     val presence by animateFloatAsState(if (state.leavingNext == index) 0.5f else 1f, tween(250))
+    val popped = index in state.popped
+    val pop = remember { Animatable(0f) }
+    LaunchedEffect(popped) {
+        if (popped) pop.animateTo(1f, tween(POP_SWELL_MS, easing = FastOutLinearInEasing)) else pop.snapTo(0f)
+    }
     val density = LocalDensity.current.density
     Troll(
         team = team,
-        mood = mood,
+        mood = moodOf(state, team),
         gaze = state.gaze[index] ?: 0,
         index = index,
         shadowHeight = 10.dp,
@@ -455,12 +461,19 @@ private fun BoxScope.Piece(state: GameState, team: Team, index: Int, fallen: Boo
             .matchParentSize()
             .padding(PIECE_PADDING)
             .graphicsLayer {
-                alpha = presence
+                // Swells like a bubble, fading out over the last stretch as the burst goes off.
+                alpha = presence * (1f - ((pop.value - 0.7f) / 0.3f).coerceIn(0f, 1f))
+                scaleX = 1f + 0.25f * pop.value
+                scaleY = 1f + 0.25f * pop.value
                 translationY = fall.value * drop * density
                 rotationZ = fall.value * direction * 90f
                 transformOrigin = TransformOrigin(0.5f, 1f)
             },
     )
+    if (popped) {
+        // Centered on the troll lying in the dirt: half its height to the side of its feet, level with them.
+        PopBurst(team.color, trigger = true, offset = DpOffset((direction * 48).dp, (drop + 41).dp))
+    }
     state.bubbles[index]?.let { text ->
         // Follows a fallen troll down: sideways toward where its head lies, and down into the dirt.
         SpeechBubble(
@@ -475,6 +488,23 @@ private fun BoxScope.Piece(state: GameState, team: Team, index: Int, fallen: Boo
             },
         )
     }
+}
+
+/** Winners hop; during a draw's stare, everyone shrugs. */
+private fun moodOf(state: GameState, team: Team): Mood {
+    val result = state.result
+    return when {
+        result?.winner == team -> Mood.HOP
+        result?.isDraw == true && state.stare -> Mood.SHRUG
+        else -> Mood.IDLE
+    }
+}
+
+/** Which way a losing troll topples: off the nearest side, alternating by row in the middle column. */
+private fun fallDirection(row: Int, col: Int): Int = when (col) {
+    0 -> -1
+    COLUMNS - 1 -> 1
+    else -> if (row % 2 == 1) 1 else -1
 }
 
 @Composable
