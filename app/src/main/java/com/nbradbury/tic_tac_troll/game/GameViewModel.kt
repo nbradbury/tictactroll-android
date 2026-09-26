@@ -54,6 +54,8 @@ data class GameState(
     val locked: Boolean = false,
     /** Losing trolls that have popped after landing in the dirt. */
     val popped: Set<Int> = emptySet(),
+    /** The bored troll that's mid-yawn, if any. */
+    val yawning: Int? = null,
     /** A menu troll that's briefly hopping with excitement. */
     val excitedTroll: Int? = null,
 ) {
@@ -83,9 +85,17 @@ class GameViewModel(initialRules: Rules = Rules.CLASSIC) : ViewModel() {
     init {
         repeatEvery(GAZE_MS) { gazeTick() }
         repeatEvery(CHATTER_MS) { chatter() }
+        repeatEvery(YAWN_EVERY_MS) { yawn() }
     }
 
-    fun setMode(mode: Mode) = _state.update { it.copy(mode = mode) }
+    /** Gorp perks up when a second player joins. */
+    fun setMode(mode: Mode) {
+        _state.update { it.copy(mode = mode) }
+        if (mode == Mode.PVP) {
+            say(MENU_A, "ooh", BUBBLE_MS)
+            excite(MENU_A)
+        }
+    }
 
     fun setRules(rules: Rules) = _state.update { it.copy(rules = rules) }
 
@@ -95,12 +105,16 @@ class GameViewModel(initialRules: Rules = Rules.CLASSIC) : ViewModel() {
         when (difficulty) {
             Difficulty.HARD -> {
                 say(MENU_B, "heh", BUBBLE_MS)
-                _state.update { it.copy(excitedTroll = MENU_B) }
-                laterReplacing("hop", EXCITED_MS) { _state.update { it.copy(excitedTroll = null) } }
+                excite(MENU_B)
             }
             Difficulty.EASY -> say(MENU_B, "meh", BUBBLE_MS)
             Difficulty.MEDIUM -> Unit
         }
+    }
+
+    private fun excite(key: Int) {
+        _state.update { it.copy(excitedTroll = key) }
+        laterReplacing("hop", EXCITED_MS) { _state.update { it.copy(excitedTroll = null) } }
     }
 
     fun start() {
@@ -113,6 +127,7 @@ class GameViewModel(initialRules: Rules = Rules.CLASSIC) : ViewModel() {
         _state.update {
             it.copy(
                 screen = Screen.MENU, board = EMPTY_BOARD, history = emptyList(), departed = null, popped = emptySet(),
+                yawning = null,
                 result = null, showSheet = false,
                 bubbles = emptyMap(), gaze = emptyMap(), stare = false, locked = false,
             )
@@ -164,6 +179,24 @@ class GameViewModel(initialRules: Rules = Rules.CLASSIC) : ViewModel() {
         }
     }
 
+    /**
+     * Losers glance at the winning line before they topple; winners look down at the losers, who are headed for the
+     * dirt below.
+     */
+    private fun endingGazes(board: Board, winner: Team, line: List<Int>): Map<Int, Gaze> {
+        val middle = line[1]
+        val losers = board.indices.filter { board[it] == winner.other }
+        val loserCol = if (losers.isEmpty()) 1f else losers.map { it % COLUMNS }.average().toFloat()
+        return board.indices.filter { board[it] != null }.associateWith {
+            val col = it % COLUMNS
+            if (board[it] == winner) {
+                Gaze((loserCol - col).sign.toInt(), 1)
+            } else {
+                Gaze((middle % COLUMNS - col).sign, (middle / COLUMNS - it / COLUMNS).sign)
+            }
+        }
+    }
+
     /** Every troll on [board] turns to look at the one that just landed at [index]. */
     private fun everyoneLooksAt(board: Board, index: Int): Map<Int, Gaze> =
         board.indices.filter { board[it] != null }.associateWith {
@@ -171,7 +204,12 @@ class GameViewModel(initialRules: Rules = Rules.CLASSIC) : ViewModel() {
         }
 
     private fun cpuMove() {
-        _state.update { it.copy(locked = true) }
+        // Bramble's trolls look up and cock their heads while he "thinks".
+        _state.update { s ->
+            val thinking = s.board.indices.filter { s.board[it] == Team.B }
+                .associateWith { Gaze(if (Random.nextBoolean()) 1 else -1, -1) }
+            s.copy(locked = true, gaze = s.gaze + thinking)
+        }
         later(CPU_DELAY_MS) {
             _state.update { it.copy(locked = false) }
             val s = _state.value
@@ -181,6 +219,7 @@ class GameViewModel(initialRules: Rules = Rules.CLASSIC) : ViewModel() {
 
     private fun endGame(result: GameResult) {
         _state.update { it.copy(scores = it.scores.add(result.winner)) }
+        result.winner?.let { winner -> _state.update { s -> s.copy(gaze = endingGazes(s.board, winner, result.line)) } }
         if (result.isDraw) {
             // A chatter bubble's pending removal would otherwise cut its troll's "meh" short. The chorus replaces
             // any showing bubbles and the stare clears them all, so nothing is left stranded.
@@ -199,7 +238,8 @@ class GameViewModel(initialRules: Rules = Rules.CLASSIC) : ViewModel() {
         clearLater()
         _state.update {
             it.copy(
-                board = EMPTY_BOARD, history = emptyList(), departed = null, popped = emptySet(), turn = starter,
+                board = EMPTY_BOARD, history = emptyList(), departed = null, popped = emptySet(), yawning = null,
+                turn = starter,
                 starter = starter,
                 result = null, showSheet = false, bubbles = emptyMap(), stare = false, locked = false,
                 gaze = emptyMap(),
@@ -216,7 +256,10 @@ class GameViewModel(initialRules: Rules = Rules.CLASSIC) : ViewModel() {
 
     /** One or two trolls glance at a neighbor, glance anywhere, or look straight ahead, by cumulative roll. */
     private fun gazeTick() {
-        if (_state.value.stare) return
+        val s = _state.value
+        // Endings and Bramble's thinking pose set gazes on purpose; don't glance them away.
+        val posed = s.screen == Screen.GAME && (s.result != null || s.isCpuTurn)
+        if (s.stare || posed) return
         val actors = actors()
         if (actors.isEmpty()) return
         val gaze = _state.value.gaze.toMutableMap()
@@ -233,6 +276,16 @@ class GameViewModel(initialRules: Rules = Rules.CLASSIC) : ViewModel() {
             }
         }
         _state.update { it.copy(gaze = gaze) }
+    }
+
+    /** The troll that's about to get bored stretches and yawns now and then. */
+    private fun yawn() {
+        val s = _state.value
+        val cell = s.leavingNext ?: return
+        if (s.screen != Screen.GAME) return
+        _state.update { it.copy(yawning = cell) }
+        say(cell, "yawn", YAWN_MS)
+        laterReplacing("yawn", YAWN_MS) { _state.update { it.copy(yawning = null) } }
     }
 
     private fun chatter() {
@@ -285,6 +338,8 @@ class GameViewModel(initialRules: Rules = Rules.CLASSIC) : ViewModel() {
         const val CPU_DELAY_MS = 650L
         const val BUBBLE_MS = 1800L
         const val EXCITED_MS = 1200L
+        const val YAWN_EVERY_MS = 3200L
+        const val YAWN_MS = 1300L
         const val DRAW_MEH_DELAY_MS = 350L
         const val DRAW_STARE_MS = 2600L
         const val SHEET_DELAY_WIN_MS = 1600L

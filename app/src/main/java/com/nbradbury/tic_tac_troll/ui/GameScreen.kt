@@ -77,8 +77,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.nbradbury.tic_tac_troll.R
 import com.nbradbury.tic_tac_troll.game.COLUMNS
-import com.nbradbury.tic_tac_troll.game.Gaze
 import com.nbradbury.tic_tac_troll.game.GameState
+import com.nbradbury.tic_tac_troll.game.Gaze
 import com.nbradbury.tic_tac_troll.game.Mode
 import com.nbradbury.tic_tac_troll.game.Team
 import com.nbradbury.tic_tac_troll.ui.theme.Cream
@@ -95,8 +95,10 @@ import com.nbradbury.tic_tac_troll.ui.theme.lilita
 import com.nbradbury.tic_tac_troll.ui.theme.mono
 import com.nbradbury.tic_tac_troll.ui.theme.sans
 import kotlin.math.PI
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.roundToInt
+import kotlin.math.sign
 import kotlin.math.sin
 import kotlinx.coroutines.delay
 
@@ -438,11 +440,12 @@ private fun BoxScope.Piece(state: GameState, team: Team, index: Int, fallen: Boo
     val density = LocalDensity.current.density
     Troll(
         team = team,
-        mood = moodOf(state, team),
+        mood = moodOf(state, team, index),
         gaze = state.gaze[index] ?: Gaze(),
         index = index,
         shadowHeight = 10.dp,
         grounded = !fallen,
+        flinch = flinchOf(state, index),
         modifier = Modifier
             .matchParentSize()
             .padding(PIECE_PADDING)
@@ -476,14 +479,23 @@ private fun BoxScope.Piece(state: GameState, team: Team, index: Int, fallen: Boo
     }
 }
 
-/** Winners hop; during a draw's stare, everyone shrugs. */
-private fun moodOf(state: GameState, team: Team): Mood {
+/** Winners hop; during a draw's stare, everyone shrugs; the bored troll yawns. */
+private fun moodOf(state: GameState, team: Team, index: Int): Mood {
     val result = state.result
     return when {
         result?.winner == team -> Mood.HOP
         result?.isDraw == true && state.stare -> Mood.SHRUG
+        state.yawning == index -> Mood.YAWN
         else -> Mood.IDLE
     }
+}
+
+/** Trolls next to the one that just landed startle away from it. */
+private fun flinchOf(state: GameState, index: Int): Flinch? {
+    val last = state.history.lastOrNull()
+    val nearby = last != null && last != index &&
+        abs(last / COLUMNS - index / COLUMNS) <= 1 && abs(last % COLUMNS - index % COLUMNS) <= 1
+    return if (nearby) Flinch(away = (index % COLUMNS - last!! % COLUMNS).sign, key = state.history) else null
 }
 
 /** Which way a losing troll topples: off the nearest side, alternating by row in the middle column. */

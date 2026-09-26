@@ -9,6 +9,7 @@ import com.nbradbury.tic_tac_troll.game.GameState
 import com.nbradbury.tic_tac_troll.game.Mode
 import com.nbradbury.tic_tac_troll.game.Team
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * A light tick as each troll lands, then a confirm for a win or a reject for losing to the CPU, timed with the ending
@@ -24,7 +25,11 @@ fun GameHaptics(state: GameState) {
         // The first state seen is recorded silently, so recreating the activity doesn't buzz.
         if (previous == null) return@LaunchedEffect
         if (state.board.indices.any { state.board[it] != null && previous.board[it] == null }) {
-            haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+            // Timed to the troll hitting its crate at the end of its drop.
+            launch {
+                delay(LANDING_MS.toLong())
+                haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+            }
         }
         val winner = state.result?.winner
         if (previous.result == null && winner != null) {

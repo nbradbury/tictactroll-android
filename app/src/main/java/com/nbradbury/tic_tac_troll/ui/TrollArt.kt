@@ -7,6 +7,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -41,20 +44,25 @@ private val BRAMBLE_EYES = listOf(
 
 private val Team.eyes: List<EyeSprite> get() = if (this == Team.A) GORP_EYES else BRAMBLE_EYES
 
+/** Eyelid skin, from each troll's cheeks, darkened toward the painted rim around the eyes. */
+private val Team.lid: Color get() = if (this == Team.A) Color(0xFF6A8BAA) else Color(0xFF7A3428)
+
 /** How much of an eye's room an iris uses at full gaze; less vertically, where the lids crowd it. */
 private const val REACH_X = 0.75f
 private const val REACH_Y = 0.25f
 
 /**
- * A troll's picture whose irises look toward [lookX] and [lookY] (each -1 to 1, positive is right and down). Laid out
- * like an Image with ContentScale.Fit and bottom-center alignment.
+ * A troll's picture whose irises look toward [lookX] and [lookY] (each -1 to 1, positive is right and down), with
+ * eyelids closed by [blink] (0 open, 1 shut). Laid out like an Image with ContentScale.Fit and bottom-center alignment.
  */
 @Composable
-fun TrollArt(team: Team, modifier: Modifier = Modifier, lookX: Float = 0f, lookY: Float = 0f) {
+fun TrollArt(team: Team, modifier: Modifier = Modifier, lookX: Float = 0f, lookY: Float = 0f, blink: Float = 0f) {
     val base = ImageBitmap.imageResource(team.image)
     val eyes = team.eyes
     val irises = eyes.map { ImageBitmap.imageResource(it.iris) }
     val sockets = remember(team) { eyes.map { Path().apply { addOval(it.socket) } } }
+    val lid = team.lid
+    val lash = lid.copy(red = lid.red * 0.35f, green = lid.green * 0.35f, blue = lid.blue * 0.35f)
     Canvas(modifier) {
         val scale = min(size.width / base.width, size.height / base.height)
         val left = (size.width - base.width * scale) / 2
@@ -69,6 +77,16 @@ fun TrollArt(team: Team, modifier: Modifier = Modifier, lookX: Float = 0f, lookY
                     val x = eye.left + lookX * eye.roomX * REACH_X
                     val y = eye.top + lookY * eye.roomY * REACH_Y
                     drawImage(irises[i], topLeft = Offset(x, y))
+                    if (blink > 0f) {
+                        // The upper lid sweeps down over the whole opening, its lashes along the leading edge.
+                        val socket = eye.socket
+                        val edge = socket.top - 1f + (socket.height + 2f) * blink
+                        drawRect(
+                            Brush.verticalGradient(listOf(lid, lid, lash), socket.top - 1f, edge),
+                            topLeft = Offset(socket.left, socket.top - 1f),
+                            size = Size(socket.width, edge - socket.top + 1f),
+                        )
+                    }
                 }
             }
         }
