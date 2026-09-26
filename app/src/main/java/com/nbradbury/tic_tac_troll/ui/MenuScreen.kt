@@ -1,10 +1,11 @@
 package com.nbradbury.tic_tac_troll.ui
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,10 +18,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -57,6 +58,7 @@ import com.nbradbury.tic_tac_troll.game.MENU_B
 import com.nbradbury.tic_tac_troll.game.Mode
 import com.nbradbury.tic_tac_troll.game.Rules
 import com.nbradbury.tic_tac_troll.game.Team
+import com.nbradbury.tic_tac_troll.ui.theme.Accent
 import com.nbradbury.tic_tac_troll.ui.theme.Cream
 import com.nbradbury.tic_tac_troll.ui.theme.Eyebrow
 import com.nbradbury.tic_tac_troll.ui.theme.Ink
@@ -140,50 +142,7 @@ private fun MenuContent(
         }
 
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                modifier = Modifier
-                    .background(Color.Black.copy(alpha = 0.28f), RoundedCornerShape(16.dp))
-                    .padding(5.dp),
-            ) {
-                listOf(Mode.PVP to R.string.mode_pvp, Mode.CPU to R.string.mode_cpu).forEach { (mode, label) ->
-                    SelectableButton(
-                        text = stringResource(label),
-                        selected = state.mode == mode,
-                        onClick = { onMode(mode) },
-                        height = 48.dp,
-                        radius = 12.dp,
-                        weight = FontWeight.Bold,
-                        fontSize = 15,
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-            }
-            LabeledPills(
-                label = stringResource(R.string.rules),
-                options = listOf(Rules.CLASSIC to R.string.rules_classic, Rules.ROLLING to R.string.rules_rolling),
-                selected = state.rules,
-                onSelect = onRules,
-            )
-            if (state.rules == Rules.ROLLING) {
-                BasicText(
-                    stringResource(R.string.rules_rolling_hint),
-                    style = sans(12, FontWeight.Normal, MutedLabel).copy(textAlign = TextAlign.Center),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-            if (state.mode == Mode.CPU) {
-                LabeledPills(
-                    label = stringResource(R.string.cpu_skill),
-                    options = listOf(
-                        Difficulty.EASY to R.string.difficulty_easy,
-                        Difficulty.MEDIUM to R.string.difficulty_medium,
-                        Difficulty.HARD to R.string.difficulty_hard,
-                    ),
-                    selected = state.difficulty,
-                    onSelect = onDifficulty,
-                )
-            }
+            SettingsCard(state, onMode, onDifficulty, onRules)
             ChunkyButton(
                 text = stringResource(R.string.start),
                 style = lilita(24).copy(letterSpacing = 0.02.em),
@@ -220,25 +179,87 @@ private fun MenuTroll(state: GameState, team: Team, key: Int, index: Int) {
     }
 }
 
-/** A muted label followed by a row of outlined pills, one per option. */
+/** All game setup in one panel: who you play, how hard the CPU is, and whether trolls get bored. */
 @Composable
-private fun <T> LabeledPills(label: String, options: List<Pair<T, Int>>, selected: T, onSelect: (T) -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        BasicText(label, style = sans(13, color = MutedLabel), maxLines = 1, modifier = Modifier.widthIn(min = 72.dp))
-        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            options.forEach { (value, text) ->
+private fun SettingsCard(
+    state: GameState,
+    onMode: (Mode) -> Unit,
+    onDifficulty: (Difficulty) -> Unit,
+    onRules: (Rules) -> Unit,
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .animateContentSize()
+            .background(Color.Black.copy(alpha = 0.28f), RoundedCornerShape(18.dp))
+            .padding(5.dp),
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            listOf(Mode.PVP to R.string.mode_pvp, Mode.CPU to R.string.mode_cpu).forEach { (mode, label) ->
                 SelectableButton(
-                    text = stringResource(text),
-                    selected = selected == value,
-                    onClick = { onSelect(value) },
-                    height = 44.dp,
-                    radius = 22.dp,
-                    weight = FontWeight.Medium,
-                    fontSize = 14,
-                    outlined = true,
+                    text = stringResource(label),
+                    selected = state.mode == mode,
+                    onClick = { onMode(mode) },
+                    height = 48.dp,
+                    weight = FontWeight.Bold,
+                    fontSize = 15,
                     modifier = Modifier.weight(1f),
                 )
             }
+        }
+        // Difficulty only matters against the CPU, and sits right under that choice in a quieter style.
+        if (state.mode == Mode.CPU) {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf(
+                    Difficulty.EASY to R.string.difficulty_easy,
+                    Difficulty.MEDIUM to R.string.difficulty_medium,
+                    Difficulty.HARD to R.string.difficulty_hard,
+                ).forEach { (difficulty, label) ->
+                    SelectableButton(
+                        text = stringResource(label),
+                        selected = state.difficulty == difficulty,
+                        onClick = { onDifficulty(difficulty) },
+                        height = 40.dp,
+                        weight = FontWeight.Medium,
+                        fontSize = 14,
+                        prominent = false,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+        }
+        BoredTrollsSwitch(
+            on = state.rules == Rules.ROLLING,
+            onChange = { onRules(if (it) Rules.ROLLING else Rules.CLASSIC) },
+        )
+    }
+}
+
+@Composable
+private fun BoredTrollsSwitch(on: Boolean, onChange: (Boolean) -> Unit) {
+    val track by animateColorAsState(if (on) Accent else Outline, tween(200))
+    val thumbX by animateDpAsState(if (on) 21.dp else 3.dp, tween(200))
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .toggleable(value = on, role = Role.Switch, onValueChange = onChange)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+    ) {
+        Column(Modifier.weight(1f)) {
+            BasicText(stringResource(R.string.rules_rolling), style = sans(15, FontWeight.Bold))
+            BasicText(stringResource(R.string.rules_rolling_hint), style = sans(12, FontWeight.Normal, MutedLabel))
+        }
+        Box(Modifier.size(44.dp, 26.dp).background(track, CircleShape)) {
+            Box(
+                Modifier
+                    .offset(x = thumbX, y = 3.dp)
+                    .size(20.dp)
+                    .background(Cream, CircleShape),
+            )
         }
     }
 }
@@ -249,26 +270,30 @@ private fun SelectableButton(
     selected: Boolean,
     onClick: () -> Unit,
     height: Dp,
-    radius: Dp,
     weight: FontWeight,
     fontSize: Int,
     modifier: Modifier = Modifier,
-    outlined: Boolean = false,
+    prominent: Boolean = true,
 ) {
-    val shape = RoundedCornerShape(radius)
-    val background by animateColorAsState(if (selected) Cream else Color.Transparent, tween(200))
+    val shape = RoundedCornerShape(12.dp)
+    val highlight = if (prominent) Cream else Color.White.copy(alpha = 0.14f)
+    val background by animateColorAsState(if (selected) highlight else Color.Transparent, tween(200))
+    val textColor = when {
+        selected && prominent -> OnAccent
+        selected || prominent -> Ink
+        else -> MutedLabel
+    }
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
             .height(height)
             .clip(shape)
             .background(background, shape)
-            .then(if (outlined) Modifier.border(1.5.dp, if (selected) Cream else Outline, shape) else Modifier)
             .clickable(onClick = onClick),
     ) {
         BasicText(
             text,
-            style = sans(fontSize, weight, if (selected) OnAccent else Ink),
+            style = sans(fontSize, weight, textColor),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = fontSize.sp),

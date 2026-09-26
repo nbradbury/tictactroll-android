@@ -9,11 +9,8 @@
     <string name="bramble_cpu">Bramble (CPU)</string>
     <string name="mode_pvp">2 players</string>
     <string name="mode_cpu">vs CPU</string>
-    <string name="rules">Rules</string>
-    <string name="rules_classic">Classic</string>
     <string name="rules_rolling">Bored trolls</string>
-    <string name="rules_rolling_hint">Three trolls each. A fourth makes your oldest leave.</string>
-    <string name="cpu_skill">CPU skill</string>
+    <string name="rules_rolling_hint">Three trolls each; the oldest leaves.</string>
     <string name="difficulty_easy">Easy</string>
     <string name="difficulty_medium">Medium</string>
     <string name="difficulty_hard">Troll</string>
