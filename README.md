@@ -43,7 +43,8 @@ app/src/main/java/com/nbradbury/tic_tac_troll/
 ## Credits
 
 - Game design prototyped in Claude Design.
-- Background music: *Where the Trolls Tread*.
+- Troll images created by Adobe Firefly.
+- Background music: *Where the Trolls Tread* created by Google Gemini.
 - Sound effects and troll voices are synthesized; the voices start from macOS speech and are pitched and roughened into trolls.
 - Fonts: [Lilita One](https://fonts.google.com/specimen/Lilita+One), [Rubik Dirt](https://fonts.google.com/specimen/Rubik+Dirt), [DM Sans](https://fonts.google.com/specimen/DM+Sans) and [JetBrains Mono](https://fonts.google.com/specimen/JetBrains+Mono), all under the SIL Open Font License 1.1.
 
