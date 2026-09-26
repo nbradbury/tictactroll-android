@@ -68,8 +68,8 @@ data class GameState(
 
 private data class Actor(val key: Int, val col: Int, val team: Team)
 
-class GameViewModel : ViewModel() {
-    private val _state = MutableStateFlow(GameState())
+class GameViewModel(initialRules: Rules = Rules.CLASSIC) : ViewModel() {
+    private val _state = MutableStateFlow(GameState(rules = initialRules))
     val state: StateFlow<GameState> = _state.asStateFlow()
 
     /** Delayed actions tied to the current round, cancelled when a new round starts or on returning to the menu. */

@@ -22,6 +22,7 @@ import androidx.core.content.edit
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nbradbury.tic_tac_troll.game.GameViewModel
+import com.nbradbury.tic_tac_troll.game.Rules
 import com.nbradbury.tic_tac_troll.game.Screen
 import com.nbradbury.tic_tac_troll.ui.BackgroundMusic
 import com.nbradbury.tic_tac_troll.ui.GameHaptics
@@ -42,11 +43,16 @@ class MainActivity : ComponentActivity() {
 }
 
 private const val KEY_SOUND = "sound_on"
+private const val KEY_BORED_TROLLS = "bored_trolls"
 
 @Composable
-fun TicTacTrollApp(vm: GameViewModel = viewModel()) {
-    val state by vm.state.collectAsStateWithLifecycle()
+fun TicTacTrollApp() {
     val prefs = LocalContext.current.getSharedPreferences("settings", Context.MODE_PRIVATE)
+    // Created with the saved rules so the switch starts in place instead of animating on at launch.
+    val vm = viewModel {
+        GameViewModel(if (prefs.getBoolean(KEY_BORED_TROLLS, false)) Rules.ROLLING else Rules.CLASSIC)
+    }
+    val state by vm.state.collectAsStateWithLifecycle()
     var soundOn by remember { mutableStateOf(prefs.getBoolean(KEY_SOUND, true)) }
     BackgroundMusic(R.raw.where_the_trolls_tread, enabled = soundOn)
     GameSounds(state, enabled = soundOn)
@@ -57,7 +63,10 @@ fun TicTacTrollApp(vm: GameViewModel = viewModel()) {
                 state = state,
                 onMode = vm::setMode,
                 onDifficulty = vm::setDifficulty,
-                onRules = vm::setRules,
+                onRules = {
+                    vm.setRules(it)
+                    prefs.edit { putBoolean(KEY_BORED_TROLLS, it == Rules.ROLLING) }
+                },
                 onStart = vm::start,
                 soundOn = soundOn,
                 onSoundChange = {
