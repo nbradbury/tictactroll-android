@@ -27,18 +27,21 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
@@ -106,6 +109,7 @@ private const val CELL = 108
 private const val STEP = 118 // cell + gap
 private const val BOARD = 344
 private val TOP_BAR_BUTTON_BAND = 96.dp
+private val TOP_SIDES = WindowInsetsSides.Top + WindowInsetsSides.Horizontal
 private val PIECE_PADDING = PaddingValues(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 8.dp)
 // A bored troll swells like a bubble and vanishes as the burst goes off.
 private val BORED_EXIT = scaleOut(tween(POP_SWELL_MS, easing = FastOutLinearInEasing), targetScale = 1.25f) +
@@ -131,7 +135,8 @@ fun GameScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxSize()
-                .statusBarsPadding()
+                // With the bars hidden, this keeps the top bar clear of the camera cutout.
+                .windowInsetsPadding(WindowInsets.safeDrawing.only(TOP_SIDES))
                 .padding(start = 16.dp, end = 16.dp, top = 8.dp),
         ) {
             TopBar(onMenu, onRestart)
@@ -519,7 +524,7 @@ private fun ResultSheet(winner: Team?, onMenu: () -> Unit, onRematch: () -> Unit
             .background(SheetBackground, shape)
             // Swallow taps so they don't reach the board underneath.
             .clickable(remember { MutableInteractionSource() }, indication = null) {}
-            .navigationBarsPadding()
+            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
             .padding(start = 20.dp, end = 20.dp, top = 22.dp, bottom = 20.dp),
     ) {
         BasicText(
