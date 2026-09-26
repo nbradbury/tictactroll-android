@@ -40,6 +40,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -147,7 +148,8 @@ fun Troll(
         )
         Image(
             painter = painterResource(team.image),
-            contentDescription = team.displayName(),
+            // Decorative: the board cell or the name under a menu troll describes it.
+            contentDescription = null,
             contentScale = ContentScale.Fit,
             alignment = Alignment.BottomCenter,
             modifier = Modifier
@@ -180,6 +182,8 @@ fun BoxScope.SpeechBubble(text: String, fontSize: Int, lift: Dp, modifier: Modif
             .align(Alignment.TopCenter)
             .offset(y = -lift)
             .then(modifier)
+            // Chatter isn't read aloud; it would interrupt TalkBack every few seconds.
+            .clearAndSetSemantics {}
             .graphicsLayer {
                 scaleX = scale.value
                 scaleY = scale.value

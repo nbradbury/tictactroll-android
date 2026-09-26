@@ -1,13 +1,17 @@
 package com.nbradbury.tic_tac_troll.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -57,6 +61,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -89,6 +98,7 @@ private const val STEP = 118 // cell + gap
 private const val BOARD = 344
 private val TOP_BAR_BUTTON_BAND = 96.dp
 private val PIECE_PADDING = PaddingValues(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 8.dp)
+private val BORED_EXIT = fadeOut(tween(450)) + slideOutVertically(tween(450)) { it / 4 }
 
 @Composable
 fun GameScreen(
@@ -110,10 +120,19 @@ fun GameScreen(
         ) {
             TopBar(onMenu, onRestart)
             ScoreChips(state, Modifier.padding(top = 14.dp))
+            val status = statusText(state)
+            val announcement = listOfNotNull(lastMoveAnnouncement(state), status).joinToString(" ")
             BasicText(
-                statusText(state),
+                status,
                 style = sans(17).copy(textAlign = TextAlign.Center),
-                modifier = Modifier.padding(top = 22.dp).heightIn(min = 28.dp),
+                modifier = Modifier
+                    .padding(top = 22.dp)
+                    .heightIn(min = 28.dp)
+                    // Read aloud whenever it changes, so TalkBack users hear every move, including the CPU's.
+                    .semantics {
+                        contentDescription = announcement
+                        liveRegion = LiveRegionMode.Polite
+                    },
             )
             Board(state, onCell, Modifier.padding(top = 26.dp))
         }
@@ -141,8 +160,21 @@ private fun statusText(state: GameState): String {
     }
 }
 
+/** "Bramble played row 1, column 3." plus, under rolling rules, which troll left. Null before the first move. */
+@Composable
+private fun lastMoveAnnouncement(state: GameState): String? {
+    val last = state.history.lastOrNull()
+    val mover = last?.let { state.board[it] } ?: return null
+    val played = stringResource(R.string.announce_played, mover.displayName(), last / COLUMNS + 1, last % COLUMNS + 1)
+    val left = state.departed?.let {
+        stringResource(R.string.announce_left, mover.displayName(), it / COLUMNS + 1, it % COLUMNS + 1)
+    }
+    return listOfNotNull(played, left).joinToString(" ")
+}
+
 @Composable
 private fun TopBar(onMenu: () -> Unit, onRestart: () -> Unit) {
+    val back = stringResource(R.string.back)
     Box(Modifier.fillMaxWidth()) {
         Box(
             contentAlignment = Alignment.Center,
@@ -150,9 +182,10 @@ private fun TopBar(onMenu: () -> Unit, onRestart: () -> Unit) {
                 .size(48.dp)
                 .clip(CircleShape)
                 .background(Scrim)
-                .clickable(onClickLabel = stringResource(R.string.back), onClick = onMenu),
+                .clickable(onClickLabel = back, onClick = onMenu)
+                .semantics { contentDescription = back },
         ) {
-            BasicText("‹", style = sans(22, FontWeight.Bold))
+            BasicText("‹", style = sans(22, FontWeight.Bold), modifier = Modifier.clearAndSetSemantics {})
         }
         // Reserve a band for the buttons on each side so the centered title can't run into them.
         TitleText(
@@ -272,6 +305,11 @@ private fun Board(state: GameState, onCell: (Int) -> Unit, modifier: Modifier = 
             val clickable = team == null && state.acceptsMove
             val interaction = remember { MutableInteractionSource() }
             val pressed by interaction.collectIsPressedAsState()
+            // Keeps a departing troll's team for its exit animation; a plain holder so writing it doesn't recompose.
+            val lastTeam = remember { arrayOfNulls<Team>(1) }
+            if (team != null) lastTeam[0] = team
+            val description = cellDescription(i, team, leaving = state.leavingNext == i)
+            val placeLabel = stringResource(R.string.place_troll, state.turn.displayName())
             val glow by animateColorAsState(
                 if (result?.winner != null && i in result.line) result.winner.color else Color.Transparent,
                 tween(300),
@@ -282,11 +320,24 @@ private fun Board(state: GameState, onCell: (Int) -> Unit, modifier: Modifier = 
                     .size(CELL.dp)
                     .zIndex(if (fallen) 10f + (2 - row) else 1f)
                     .crate(glow)
-                    .clickable(interactionSource = interaction, indication = null, enabled = clickable) { onCell(i) },
+                    .clickable(
+                        interactionSource = interaction,
+                        indication = null,
+                        enabled = clickable,
+                        onClickLabel = placeLabel,
+                    ) { onCell(i) }
+                    .semantics { contentDescription = description },
             ) {
-                if (team != null) {
-                    Piece(state, team, i, fallen)
-                } else if (pressed && clickable) {
+                AnimatedVisibility(
+                    visible = team != null,
+                    enter = EnterTransition.None, // The troll pops itself in.
+                    // Only a troll that got bored and left sulks off; a new round clears the board instantly.
+                    exit = if (state.departed == i) BORED_EXIT else ExitTransition.None,
+                    modifier = Modifier.matchParentSize(),
+                ) {
+                    Box(Modifier.fillMaxSize()) { lastTeam[0]?.let { Piece(state, it, i, fallen) } }
+                }
+                if (team == null && pressed && clickable) {
                     // A ghost of the troll about to land; sliding off the crate cancels the move.
                     Image(
                         painterResource(state.turn.image),
@@ -299,6 +350,17 @@ private fun Board(state: GameState, onCell: (Int) -> Unit, modifier: Modifier = 
             }
         }
     }
+}
+
+/** "Row 1, column 2: Gorp, leaves next", 1-based for TalkBack. */
+@Composable
+private fun cellDescription(index: Int, team: Team?, leaving: Boolean): String {
+    val occupant = when {
+        team == null -> stringResource(R.string.cell_empty)
+        leaving -> stringResource(R.string.cell_leaving, team.displayName())
+        else -> team.displayName()
+    }
+    return stringResource(R.string.cell_description, index / COLUMNS + 1, index % COLUMNS + 1, occupant)
 }
 
 /** A troll on the board, which topples off its crate onto the dirt when its team loses. */
@@ -329,6 +391,8 @@ private fun BoxScope.Piece(state: GameState, team: Team, index: Int, fallen: Boo
         else -> if (row % 2 == 1) 1 else -1
     }
     val drop = (2 - row) * STEP + 44
+    // Under rolling rules, the troll about to get bored is dimmed as a warning.
+    val presence by animateFloatAsState(if (state.leavingNext == index) 0.5f else 1f, tween(250))
     val density = LocalDensity.current.density
     Troll(
         team = team,
@@ -341,6 +405,7 @@ private fun BoxScope.Piece(state: GameState, team: Team, index: Int, fallen: Boo
             .matchParentSize()
             .padding(PIECE_PADDING)
             .graphicsLayer {
+                alpha = presence
                 translationY = fall.value * drop * density
                 rotationZ = fall.value * direction * 90f
                 transformOrigin = TransformOrigin(0.5f, 1f)

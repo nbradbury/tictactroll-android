@@ -57,6 +57,7 @@ fun TicTacTrollApp(vm: GameViewModel = viewModel()) {
                 state = state,
                 onMode = vm::setMode,
                 onDifficulty = vm::setDifficulty,
+                onRules = vm::setRules,
                 onStart = vm::start,
                 soundOn = soundOn,
                 onSoundChange = {

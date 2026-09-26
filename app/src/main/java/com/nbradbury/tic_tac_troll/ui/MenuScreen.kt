@@ -1,18 +1,8 @@
 package com.nbradbury.tic_tac_troll.ui
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.selection.toggleable
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import com.nbradbury.tic_tac_troll.ui.theme.Scrim
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,13 +11,18 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.TextAutoSize
@@ -37,9 +32,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -53,6 +55,7 @@ import com.nbradbury.tic_tac_troll.game.GameState
 import com.nbradbury.tic_tac_troll.game.MENU_A
 import com.nbradbury.tic_tac_troll.game.MENU_B
 import com.nbradbury.tic_tac_troll.game.Mode
+import com.nbradbury.tic_tac_troll.game.Rules
 import com.nbradbury.tic_tac_troll.game.Team
 import com.nbradbury.tic_tac_troll.ui.theme.Cream
 import com.nbradbury.tic_tac_troll.ui.theme.Eyebrow
@@ -61,6 +64,7 @@ import com.nbradbury.tic_tac_troll.ui.theme.Muted
 import com.nbradbury.tic_tac_troll.ui.theme.MutedLabel
 import com.nbradbury.tic_tac_troll.ui.theme.OnAccent
 import com.nbradbury.tic_tac_troll.ui.theme.Outline
+import com.nbradbury.tic_tac_troll.ui.theme.Scrim
 import com.nbradbury.tic_tac_troll.ui.theme.TitleShadow
 import com.nbradbury.tic_tac_troll.ui.theme.dirt
 import com.nbradbury.tic_tac_troll.ui.theme.lilita
@@ -68,18 +72,22 @@ import com.nbradbury.tic_tac_troll.ui.theme.mono
 import com.nbradbury.tic_tac_troll.ui.theme.sans
 import androidx.compose.ui.graphics.Shadow as TextShadow
 
+/** Bubble headroom, troll and name at their design size. */
+private val MENU_TROLLS_HEIGHT = 227.dp
+
 @Composable
 fun MenuScreen(
     state: GameState,
     onMode: (Mode) -> Unit,
     onDifficulty: (Difficulty) -> Unit,
+    onRules: (Rules) -> Unit,
     onStart: () -> Unit,
     soundOn: Boolean,
     onSoundChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier.fillMaxSize()) {
-        MenuContent(state, onMode, onDifficulty, onStart)
+        MenuContent(state, onMode, onDifficulty, onRules, onStart)
         SoundToggle(
             on = soundOn,
             onChange = onSoundChange,
@@ -93,6 +101,7 @@ private fun MenuContent(
     state: GameState,
     onMode: (Mode) -> Unit,
     onDifficulty: (Difficulty) -> Unit,
+    onRules: (Rules) -> Unit,
     onStart: () -> Unit,
 ) {
     Column(
@@ -119,25 +128,16 @@ private fun MenuContent(
         )
         BasicText(stringResource(R.string.byline), style = sans(14, FontWeight.Normal, Muted))
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(18.dp),
-            verticalAlignment = Alignment.Bottom,
-            modifier = Modifier.padding(top = 30.dp).height(200.dp),
-        ) {
-            MenuTroll(state, Team.A, MENU_A, 0)
-            MenuTroll(state, Team.B, MENU_B, 1)
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
-            listOf(Team.A, Team.B).forEach { team ->
-                BasicText(
-                    team.displayName(),
-                    style = sans(13, color = Muted).copy(textAlign = TextAlign.Center),
-                    modifier = Modifier.width(140.dp),
-                )
+        // The trolls take the height left over, up to their design size, so the controls below always fit.
+        Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(18.dp),
+                modifier = Modifier.padding(top = 30.dp).heightIn(max = MENU_TROLLS_HEIGHT),
+            ) {
+                MenuTroll(state, Team.A, MENU_A, 0)
+                MenuTroll(state, Team.B, MENU_B, 1)
             }
         }
-
-        Spacer(Modifier.weight(1f))
 
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Row(
@@ -159,37 +159,30 @@ private fun MenuContent(
                     )
                 }
             }
+            LabeledPills(
+                label = stringResource(R.string.rules),
+                options = listOf(Rules.CLASSIC to R.string.rules_classic, Rules.ROLLING to R.string.rules_rolling),
+                selected = state.rules,
+                onSelect = onRules,
+            )
+            if (state.rules == Rules.ROLLING) {
+                BasicText(
+                    stringResource(R.string.rules_rolling_hint),
+                    style = sans(12, FontWeight.Normal, MutedLabel).copy(textAlign = TextAlign.Center),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
             if (state.mode == Mode.CPU) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    BasicText(
-                        stringResource(R.string.cpu_skill),
-                        style = sans(13, color = MutedLabel),
-                        maxLines = 1,
-                        modifier = Modifier.widthIn(min = 72.dp),
-                    )
-                    Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        listOf(
-                            Difficulty.EASY to R.string.difficulty_easy,
-                            Difficulty.MEDIUM to R.string.difficulty_medium,
-                            Difficulty.HARD to R.string.difficulty_hard,
-                        ).forEach { (difficulty, label) ->
-                            SelectableButton(
-                                text = stringResource(label),
-                                selected = state.difficulty == difficulty,
-                                onClick = { onDifficulty(difficulty) },
-                                height = 44.dp,
-                                radius = 22.dp,
-                                weight = FontWeight.Medium,
-                                fontSize = 14,
-                                outlined = true,
-                                modifier = Modifier.weight(1f),
-                            )
-                        }
-                    }
-                }
+                LabeledPills(
+                    label = stringResource(R.string.cpu_skill),
+                    options = listOf(
+                        Difficulty.EASY to R.string.difficulty_easy,
+                        Difficulty.MEDIUM to R.string.difficulty_medium,
+                        Difficulty.HARD to R.string.difficulty_hard,
+                    ),
+                    selected = state.difficulty,
+                    onSelect = onDifficulty,
+                )
             }
             ChunkyButton(
                 text = stringResource(R.string.start),
@@ -205,16 +198,48 @@ private fun MenuContent(
 
 @Composable
 private fun MenuTroll(state: GameState, team: Team, key: Int, index: Int) {
-    Box(Modifier.size(140.dp, 170.dp)) {
-        Troll(
-            team = team,
-            mood = if (state.excitedTroll == key) Mood.HOP else Mood.IDLE,
-            gaze = state.gaze[key] ?: 0,
-            index = index,
-            shadowHeight = 14.dp,
-            modifier = Modifier.fillMaxSize(),
+    Column(Modifier.fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
+        // Headroom for the speech bubble, then the troll at its 140 x 170 design proportions.
+        Spacer(Modifier.weight(30f))
+        Box(Modifier.weight(170f).aspectRatio(140f / 170f, matchHeightConstraintsFirst = true)) {
+            Troll(
+                team = team,
+                mood = if (state.excitedTroll == key) Mood.HOP else Mood.IDLE,
+                gaze = state.gaze[key] ?: 0,
+                index = index,
+                shadowHeight = 14.dp,
+                modifier = Modifier.fillMaxSize(),
+            )
+            state.bubbles[key]?.let { SpeechBubble(it, fontSize = 20, lift = 34.dp) }
+        }
+        BasicText(
+            team.displayName(),
+            style = sans(13, color = Muted).copy(textAlign = TextAlign.Center),
+            modifier = Modifier.padding(top = 10.dp),
         )
-        state.bubbles[key]?.let { SpeechBubble(it, fontSize = 20, lift = 34.dp) }
+    }
+}
+
+/** A muted label followed by a row of outlined pills, one per option. */
+@Composable
+private fun <T> LabeledPills(label: String, options: List<Pair<T, Int>>, selected: T, onSelect: (T) -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        BasicText(label, style = sans(13, color = MutedLabel), maxLines = 1, modifier = Modifier.widthIn(min = 72.dp))
+        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            options.forEach { (value, text) ->
+                SelectableButton(
+                    text = stringResource(text),
+                    selected = selected == value,
+                    onClick = { onSelect(value) },
+                    height = 44.dp,
+                    radius = 22.dp,
+                    weight = FontWeight.Medium,
+                    fontSize = 14,
+                    outlined = true,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
     }
 }
 

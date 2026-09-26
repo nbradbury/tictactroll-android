@@ -53,6 +53,7 @@ private class SoundPlayer(context: Context) {
         last = state
         if (previous == null || !enabled) return
         playLandings(previous, state)
+        playDeparture(previous, state)
         playVoices(previous, state)
         playStinger(previous, state)
     }
@@ -64,6 +65,13 @@ private class SoundPlayer(context: Context) {
                 play(thunk, if (team == Team.A) 1.12f else 0.88f)
             }
         }
+    }
+
+    /** A bored "meh" as a troll leaves its crate under rolling rules. */
+    private fun playDeparture(previous: GameState, state: GameState) {
+        val departed = state.departed ?: return
+        val team = previous.board[departed] ?: return
+        if (state.board[departed] == null) voices[team to "meh"]?.let { play(it) }
     }
 
     private fun playVoices(previous: GameState, state: GameState) {

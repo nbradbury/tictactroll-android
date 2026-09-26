@@ -33,7 +33,12 @@ data class GameState(
     val screen: Screen = Screen.MENU,
     val mode: Mode = Mode.CPU,
     val difficulty: Difficulty = Difficulty.MEDIUM,
+    val rules: Rules = Rules.CLASSIC,
     val board: Board = EMPTY_BOARD,
+    /** Occupied cells in the order they were played, oldest first. */
+    val history: List<Int> = emptyList(),
+    /** The cell a bored troll just left under [Rules.ROLLING], if the last move made one leave. */
+    val departed: Int? = null,
     val turn: Team = Team.A,
     val starter: Team = Team.A,
     val result: GameResult? = null,
@@ -54,6 +59,11 @@ data class GameState(
     val acceptsMove: Boolean get() = result == null && !locked && !isCpuTurn
 
     fun isFallen(team: Team): Boolean = result?.winner.let { it != null && it != team }
+
+    val position: Position get() = Position(board, history)
+
+    /** The troll that leaves when the player to move places their next one, if any. */
+    val leavingNext: Int? get() = if (result == null) position.leavingNext(turn, rules) else null
 }
 
 private data class Actor(val key: Int, val col: Int, val team: Team)
@@ -72,6 +82,8 @@ class GameViewModel : ViewModel() {
     }
 
     fun setMode(mode: Mode) = _state.update { it.copy(mode = mode) }
+
+    fun setRules(rules: Rules) = _state.update { it.copy(rules = rules) }
 
     /** Bramble has opinions about the difficulty: gleeful at Troll, bored at Easy. */
     fun setDifficulty(difficulty: Difficulty) {
@@ -96,7 +108,8 @@ class GameViewModel : ViewModel() {
         clearLater()
         _state.update {
             it.copy(
-                screen = Screen.MENU, board = EMPTY_BOARD, result = null, showSheet = false,
+                screen = Screen.MENU, board = EMPTY_BOARD, history = emptyList(), departed = null, result = null,
+                showSheet = false,
                 bubbles = emptyMap(), gaze = emptyMap(), stare = false, locked = false,
             )
         }
@@ -114,22 +127,40 @@ class GameViewModel : ViewModel() {
 
     private fun place(index: Int) {
         val s = _state.value
-        val board = s.board.toMutableList().also { it[index] = s.turn }
-        val result = judge(board)
+        val before = s.position
+        val after = before.play(index, s.turn, s.rules)
+        val result = judge(after.board)
         val next = s.turn.other
-        _state.update { it.copy(board = board, turn = next, result = result) }
+        _state.update {
+            it.copy(
+                board = after.board,
+                history = after.history,
+                departed = before.leavingNext(s.turn, s.rules),
+                turn = next,
+                result = result,
+                gaze = everyoneLooksAt(after.board, index),
+            )
+        }
+        // Taking the cell the other side needed to win earns a taunt from the troll that took it.
+        val blocked = judge(before.play(index, next, s.rules).board)?.winner == next
+        if (blocked && result == null) say(index, "bleh", BUBBLE_MS)
         if (result != null) {
             endGame(result)
         } else if (s.mode == Mode.CPU && next == Team.B) {
-            cpuMove(board)
+            cpuMove()
         }
     }
 
-    private fun cpuMove(board: Board) {
+    /** Every troll on [board] turns its head toward the one that just landed at [index]. */
+    private fun everyoneLooksAt(board: Board, index: Int): Map<Int, Int> =
+        board.indices.filter { board[it] != null }.associateWith { (index % COLUMNS - it % COLUMNS).sign }
+
+    private fun cpuMove() {
         _state.update { it.copy(locked = true) }
         later(CPU_DELAY_MS) {
             _state.update { it.copy(locked = false) }
-            place(cpuPick(board, _state.value.difficulty))
+            val s = _state.value
+            place(cpuPick(s.position, s.difficulty, rules = s.rules))
         }
     }
 
@@ -153,11 +184,12 @@ class GameViewModel : ViewModel() {
         clearLater()
         _state.update {
             it.copy(
-                board = EMPTY_BOARD, turn = starter, starter = starter, result = null, showSheet = false,
-                bubbles = emptyMap(), stare = false, locked = false, gaze = emptyMap(),
+                board = EMPTY_BOARD, history = emptyList(), departed = null, turn = starter, starter = starter,
+                result = null, showSheet = false, bubbles = emptyMap(), stare = false, locked = false,
+                gaze = emptyMap(),
             )
         }
-        if (_state.value.mode == Mode.CPU && starter == Team.B) cpuMove(EMPTY_BOARD)
+        if (_state.value.mode == Mode.CPU && starter == Team.B) cpuMove()
     }
 
     private fun actors(): List<Actor> {

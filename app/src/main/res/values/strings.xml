@@ -9,6 +9,10 @@
     <string name="bramble_cpu">Bramble (CPU)</string>
     <string name="mode_pvp">2 players</string>
     <string name="mode_cpu">vs CPU</string>
+    <string name="rules">Rules</string>
+    <string name="rules_classic">Classic</string>
+    <string name="rules_rolling">Bored trolls</string>
+    <string name="rules_rolling_hint">Three trolls each. A fourth makes your oldest leave.</string>
     <string name="cpu_skill">CPU skill</string>
     <string name="difficulty_easy">Easy</string>
     <string name="difficulty_medium">Medium</string>
@@ -24,6 +28,12 @@
     <string name="result_draw">Draw.</string>
     <string name="result_fallen">%1$s’s trolls hit the dirt.</string>
     <string name="result_draw_sub">Nobody’s impressed. Meh.</string>
+    <string name="cell_description">Row %1$d, column %2$d: %3$s</string>
+    <string name="cell_empty">empty</string>
+    <string name="cell_leaving">%1$s, leaves next</string>
+    <string name="place_troll">Place %1$s</string>
+    <string name="announce_played">%1$s played row %2$d, column %3$d.</string>
+    <string name="announce_left">%1$s’s oldest troll left row %2$d, column %3$d.</string>
     <string name="menu">Menu</string>
     <string name="rematch">Rematch</string>
 </resources>
