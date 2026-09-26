@@ -135,7 +135,7 @@ class GameViewModel(initialRules: Rules = Rules.CLASSIC) : ViewModel() {
             it.copy(
                 board = after.board,
                 history = after.history,
-                departed = before.leavingNext(s.turn, s.rules),
+                departed = before.leavingNext(s.turn, s.rules)?.takeIf { after.board[it] == null },
                 turn = next,
                 result = result,
                 gaze = everyoneLooksAt(after.board, index),

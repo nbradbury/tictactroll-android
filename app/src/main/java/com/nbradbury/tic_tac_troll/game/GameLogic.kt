@@ -43,7 +43,10 @@ fun judge(board: Board): GameResult? {
 enum class Rules {
     CLASSIC,
 
-    /** Each team keeps at most [ROLLING_LIMIT] trolls; placing another makes its oldest leave. No draws. */
+    /**
+     * Each team keeps at most [ROLLING_LIMIT] trolls; placing another makes its oldest leave, unless the move wins,
+     * even with that oldest troll in the line. No draws.
+     */
     ROLLING,
 }
 
@@ -63,11 +66,12 @@ data class Position(val board: Board = EMPTY_BOARD, val history: List<Int> = emp
         }
 
     fun play(cell: Int, team: Team, rules: Rules): Position {
+        val placed = board.toMutableList().also { it[cell] = team }
         val leaving = leavingNext(team, rules)
-        val next = board.toMutableList()
-        if (leaving != null) next[leaving] = null
-        next[cell] = team
-        return Position(next, history.filter { it != leaving } + cell)
+        // The win is checked first, so a line the bored troll is part of still counts and it doesn't leave.
+        if (leaving == null || judge(placed)?.winner == team) return Position(placed, history + cell)
+        placed[leaving] = null
+        return Position(placed, history.filter { it != leaving } + cell)
     }
 }
 
