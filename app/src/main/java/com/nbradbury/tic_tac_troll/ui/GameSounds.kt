@@ -37,6 +37,7 @@ private class SoundPlayer(context: Context) {
         )
         .build()
     private val thunk = pool.load(context, R.raw.thunk, 1)
+    private val pop = pool.load(context, R.raw.pop, 1)
     private val fanfare = pool.load(context, R.raw.fanfare, 1)
     private val wompWomp = pool.load(context, R.raw.womp_womp, 1)
     private val tie = pool.load(context, R.raw.tie, 1)
@@ -67,11 +68,12 @@ private class SoundPlayer(context: Context) {
         }
     }
 
-    /** A bored "meh" as a troll leaves its crate under rolling rules. */
+    /** A bubble pop as a bored troll vanishes under rolling rules; its own lead-in syncs it with the burst. */
     private fun playDeparture(previous: GameState, state: GameState) {
         val departed = state.departed ?: return
         val team = previous.board[departed] ?: return
-        if (state.board[departed] == null) voices[team to "meh"]?.let { play(it) }
+        // Gorp pops a little higher than Bramble.
+        if (state.board[departed] == null) play(pop, if (team == Team.A) 1.1f else 0.9f)
     }
 
     private fun playVoices(previous: GameState, state: GameState) {

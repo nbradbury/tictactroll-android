@@ -6,12 +6,15 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -55,6 +58,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.layout.ContentScale
@@ -79,6 +83,7 @@ import com.nbradbury.tic_tac_troll.game.COLUMNS
 import com.nbradbury.tic_tac_troll.game.GameState
 import com.nbradbury.tic_tac_troll.game.Mode
 import com.nbradbury.tic_tac_troll.game.Team
+import com.nbradbury.tic_tac_troll.ui.theme.Cream
 import com.nbradbury.tic_tac_troll.ui.theme.DirtBottom
 import com.nbradbury.tic_tac_troll.ui.theme.DirtTop
 import com.nbradbury.tic_tac_troll.ui.theme.DrawLabel
@@ -91,14 +96,23 @@ import com.nbradbury.tic_tac_troll.ui.theme.dirt
 import com.nbradbury.tic_tac_troll.ui.theme.lilita
 import com.nbradbury.tic_tac_troll.ui.theme.mono
 import com.nbradbury.tic_tac_troll.ui.theme.sans
+import kotlin.math.PI
+import kotlin.math.cos
 import kotlin.math.roundToInt
+import kotlin.math.sin
+import kotlinx.coroutines.delay
 
 private const val CELL = 108
 private const val STEP = 118 // cell + gap
 private const val BOARD = 344
 private val TOP_BAR_BUTTON_BAND = 96.dp
 private val PIECE_PADDING = PaddingValues(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 8.dp)
-private val BORED_EXIT = fadeOut(tween(450)) + slideOutVertically(tween(450)) { it / 4 }
+// A bored troll swells like a bubble and vanishes as the burst goes off.
+private val BORED_EXIT = scaleOut(tween(POP_SWELL_MS, easing = FastOutLinearInEasing), targetScale = 1.25f) +
+    fadeOut(tween(90, delayMillis = POP_SWELL_MS - 40))
+private const val POP_SWELL_MS = 140
+private const val POP_BURST_MS = 380
+private const val POP_DROPLETS = 8
 
 @Composable
 fun GameScreen(
@@ -337,6 +351,10 @@ private fun Board(state: GameState, onCell: (Int) -> Unit, modifier: Modifier = 
                 ) {
                     Box(Modifier.fillMaxSize()) { lastTeam[0]?.let { Piece(state, it, i, fallen) } }
                 }
+                if (state.departed == i) {
+                    // Keyed on the move, so each new departure bursts once.
+                    lastTeam[0]?.let { PopBurst(it.color, trigger = state.history) }
+                }
                 if (team == null && pressed && clickable) {
                     // A ghost of the troll about to land; sliding off the crate cancels the move.
                     Image(
@@ -361,6 +379,38 @@ private fun cellDescription(index: Int, team: Team?, leaving: Boolean): String {
         else -> team.displayName()
     }
     return stringResource(R.string.cell_description, index / COLUMNS + 1, index % COLUMNS + 1, occupant)
+}
+
+/** The bubble burst where a bored troll was: a ring snapping outward and a spray of [color] droplets, fading. */
+@Composable
+private fun BoxScope.PopBurst(color: Color, trigger: Any) {
+    val progress = remember(trigger) { Animatable(0f) }
+    LaunchedEffect(trigger) {
+        delay(POP_SWELL_MS - 30L)
+        progress.animateTo(1f, tween(POP_BURST_MS, easing = LinearOutSlowInEasing))
+    }
+    Canvas(Modifier.matchParentSize()) {
+        val p = progress.value
+        if (p == 0f || p == 1f) return@Canvas
+        val fade = 1f - p
+        val center = Offset(size.width / 2, size.height * 0.55f)
+        val reach = size.minDimension
+        drawCircle(
+            Cream.copy(alpha = 0.85f * fade),
+            radius = reach * (0.26f + 0.28f * p),
+            center = center,
+            style = Stroke(width = (6.dp.toPx() * fade).coerceAtLeast(1f)),
+        )
+        repeat(POP_DROPLETS) { k ->
+            val angle = 2 * PI * k / POP_DROPLETS + 0.4
+            val distance = reach * (0.28f + 0.3f * p)
+            drawCircle(
+                color.copy(alpha = fade),
+                radius = 4.5.dp.toPx() * (1f - 0.5f * p),
+                center = center + Offset((cos(angle) * distance).toFloat(), (sin(angle) * distance).toFloat()),
+            )
+        }
+    }
 }
 
 /** A troll on the board, which topples off its crate onto the dirt when its team loses. */
