@@ -25,6 +25,9 @@ data class Scores(val a: Int = 0, val b: Int = 0, val draws: Int = 0) {
     }
 }
 
+/** Where a troll is looking: each of [dx] and [dy] is -1, 0 or 1 (right and down are positive). */
+data class Gaze(val dx: Int = 0, val dy: Int = 0)
+
 /** Troll keys: board cells use their index, the two menu trolls use [MENU_A] and [MENU_B]. */
 const val MENU_A = 9
 const val MENU_B = 10
@@ -44,8 +47,7 @@ data class GameState(
     val result: GameResult? = null,
     val showSheet: Boolean = false,
     val scores: Scores = Scores(),
-    /** Horizontal glance direction (-1, 0, 1) per troll key. */
-    val gaze: Map<Int, Int> = emptyMap(),
+    val gaze: Map<Int, Gaze> = emptyMap(),
     val bubbles: Map<Int, String> = emptyMap(),
     /** True during the draw sequence, when every troll stares at the player. */
     val stare: Boolean = false,
@@ -68,7 +70,7 @@ data class GameState(
     val leavingNext: Int? get() = if (result == null) position.leavingNext(turn, rules) else null
 }
 
-private data class Actor(val key: Int, val col: Int, val team: Team)
+private data class Actor(val key: Int, val row: Int, val col: Int, val team: Team)
 
 class GameViewModel(initialRules: Rules = Rules.CLASSIC) : ViewModel() {
     private val _state = MutableStateFlow(GameState(rules = initialRules))
@@ -162,9 +164,11 @@ class GameViewModel(initialRules: Rules = Rules.CLASSIC) : ViewModel() {
         }
     }
 
-    /** Every troll on [board] turns its head toward the one that just landed at [index]. */
-    private fun everyoneLooksAt(board: Board, index: Int): Map<Int, Int> =
-        board.indices.filter { board[it] != null }.associateWith { (index % COLUMNS - it % COLUMNS).sign }
+    /** Every troll on [board] turns to look at the one that just landed at [index]. */
+    private fun everyoneLooksAt(board: Board, index: Int): Map<Int, Gaze> =
+        board.indices.filter { board[it] != null }.associateWith {
+            Gaze((index % COLUMNS - it % COLUMNS).sign, (index / COLUMNS - it / COLUMNS).sign)
+        }
 
     private fun cpuMove() {
         _state.update { it.copy(locked = true) }
@@ -181,7 +185,7 @@ class GameViewModel(initialRules: Rules = Rules.CLASSIC) : ViewModel() {
             // A chatter bubble's pending removal would otherwise cut its troll's "meh" short. The chorus replaces
             // any showing bubbles and the stare clears them all, so nothing is left stranded.
             clearLater()
-            _state.update { s -> s.copy(stare = true, gaze = s.board.indices.associateWith { 0 }) }
+            _state.update { s -> s.copy(stare = true, gaze = s.board.indices.associateWith { Gaze() }) }
             later(DRAW_MEH_DELAY_MS) {
                 _state.update { s -> s.copy(bubbles = s.board.indices.associateWith { "meh" }) }
             }
@@ -206,8 +210,8 @@ class GameViewModel(initialRules: Rules = Rules.CLASSIC) : ViewModel() {
 
     private fun actors(): List<Actor> {
         val s = _state.value
-        if (s.screen == Screen.MENU) return listOf(Actor(MENU_A, 0, Team.A), Actor(MENU_B, 1, Team.B))
-        return s.board.mapIndexedNotNull { i, team -> team?.let { Actor(i, i % COLUMNS, it) } }
+        if (s.screen == Screen.MENU) return listOf(Actor(MENU_A, 0, 0, Team.A), Actor(MENU_B, 0, 1, Team.B))
+        return s.board.mapIndexedNotNull { i, team -> team?.let { Actor(i, i / COLUMNS, i % COLUMNS, it) } }
     }
 
     /** One or two trolls glance at a neighbor, glance anywhere, or look straight ahead, by cumulative roll. */
@@ -221,9 +225,11 @@ class GameViewModel(initialRules: Rules = Rules.CLASSIC) : ViewModel() {
             val others = actors.filter { it.key != me.key }
             val roll = Random.nextFloat()
             gaze[me.key] = when {
-                others.isNotEmpty() && roll < GLANCE_AT_NEIGHBOR_ROLL -> (others.random().col - me.col).sign
-                roll < GLANCE_ANYWHERE_ROLL -> Random.nextInt(-1, 2)
-                else -> 0
+                others.isNotEmpty() && roll < GLANCE_AT_NEIGHBOR_ROLL -> others.random().let {
+                    Gaze((it.col - me.col).sign, (it.row - me.row).sign)
+                }
+                roll < GLANCE_ANYWHERE_ROLL -> Gaze(Random.nextInt(-1, 2), Random.nextInt(-1, 2))
+                else -> Gaze()
             }
         }
         _state.update { it.copy(gaze = gaze) }

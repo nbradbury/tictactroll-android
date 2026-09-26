@@ -12,7 +12,6 @@ import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -36,15 +35,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.shadow.Shadow
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.nbradbury.tic_tac_troll.R
+import com.nbradbury.tic_tac_troll.game.Gaze
 import com.nbradbury.tic_tac_troll.game.Team
 import com.nbradbury.tic_tac_troll.ui.theme.BubbleCream
 import com.nbradbury.tic_tac_troll.ui.theme.BubbleInk
@@ -66,14 +64,14 @@ enum class Mood { IDLE, HOP, SHRUG }
 private val Bottom = TransformOrigin(0.5f, 1f)
 
 /**
- * A troll that pops in when first composed, breathes, tilts its head toward [gaze] (-1, 0 or 1), and hops or shrugs
+ * A troll that pops in when first composed, breathes, looks and tilts its head toward [gaze], and hops or shrugs
  * per [mood]. [index] staggers the animations so trolls don't move in sync; the shadow fades when not [grounded].
  */
 @Composable
 fun Troll(
     team: Team,
     mood: Mood,
-    gaze: Int,
+    gaze: Gaze,
     index: Int,
     shadowHeight: Dp,
     modifier: Modifier = Modifier,
@@ -121,9 +119,12 @@ fun Troll(
     }
 
     val head by animateFloatAsState(
-        targetValue = gaze.toFloat(),
+        targetValue = gaze.dx.toFloat(),
         animationSpec = spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessLow),
     )
+    // Eyes dart ahead of the slower head turn.
+    val eyeX by animateFloatAsState(gaze.dx.toFloat(), spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMedium))
+    val eyeY by animateFloatAsState(gaze.dy.toFloat(), spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMedium))
     val breathe by rememberInfiniteTransition().animateFloat(
         initialValue = 1f,
         targetValue = 1.03f,
@@ -146,12 +147,11 @@ fun Troll(
                 .blur(3.dp, BlurredEdgeTreatment.Unbounded)
                 .background(Color.Black.copy(alpha = shadowAlpha), RoundedCornerShape(50))
         )
-        Image(
-            painter = painterResource(team.image),
-            // Decorative: the board cell or the name under a menu troll describes it.
-            contentDescription = null,
-            contentScale = ContentScale.Fit,
-            alignment = Alignment.BottomCenter,
+        // Decorative: the board cell or the name under a menu troll describes it.
+        TrollArt(
+            team = team,
+            lookX = eyeX,
+            lookY = eyeY,
             modifier = Modifier
                 .fillMaxSize()
                 .graphicsLayer {

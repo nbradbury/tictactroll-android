@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.nbradbury.tic_tac_troll.R
 import com.nbradbury.tic_tac_troll.game.Difficulty
+import com.nbradbury.tic_tac_troll.game.Gaze
 import com.nbradbury.tic_tac_troll.game.GameState
 import com.nbradbury.tic_tac_troll.game.MENU_A
 import com.nbradbury.tic_tac_troll.game.MENU_B
@@ -164,7 +165,7 @@ private fun MenuTroll(state: GameState, team: Team, key: Int, index: Int) {
             Troll(
                 team = team,
                 mood = if (state.excitedTroll == key) Mood.HOP else Mood.IDLE,
-                gaze = state.gaze[key] ?: 0,
+                gaze = state.gaze[key] ?: Gaze(),
                 index = index,
                 shadowHeight = 14.dp,
                 modifier = Modifier.fillMaxSize(),

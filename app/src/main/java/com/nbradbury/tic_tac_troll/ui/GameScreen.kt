@@ -15,7 +15,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -61,9 +60,7 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.shadow.Shadow
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -80,6 +77,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.nbradbury.tic_tac_troll.R
 import com.nbradbury.tic_tac_troll.game.COLUMNS
+import com.nbradbury.tic_tac_troll.game.Gaze
 import com.nbradbury.tic_tac_troll.game.GameState
 import com.nbradbury.tic_tac_troll.game.Mode
 import com.nbradbury.tic_tac_troll.game.Team
@@ -274,13 +272,7 @@ private fun androidx.compose.foundation.layout.RowScope.ScoreChip(
             .padding(horizontal = 12.dp, vertical = 10.dp),
     ) {
         val avatar = @Composable {
-            Image(
-                painterResource(team.image),
-                contentDescription = null,
-                contentScale = ContentScale.Fit,
-                alignment = Alignment.BottomCenter,
-                modifier = Modifier.size(34.dp, 40.dp),
-            )
+            TrollArt(team, Modifier.size(34.dp, 40.dp))
         }
         if (!mirrored) avatar()
         Column(
@@ -366,13 +358,7 @@ private fun Board(
                 }
                 if (team == null && pressed && clickable) {
                     // A ghost of the troll about to land; sliding off the crate cancels the move.
-                    Image(
-                        painterResource(state.turn.image),
-                        contentDescription = null,
-                        contentScale = ContentScale.Fit,
-                        alignment = Alignment.BottomCenter,
-                        modifier = Modifier.matchParentSize().padding(PIECE_PADDING).alpha(0.35f),
-                    )
+                    TrollArt(state.turn, Modifier.matchParentSize().padding(PIECE_PADDING).alpha(0.35f))
                 }
             }
         }
@@ -453,7 +439,7 @@ private fun BoxScope.Piece(state: GameState, team: Team, index: Int, fallen: Boo
     Troll(
         team = team,
         mood = moodOf(state, team),
-        gaze = state.gaze[index] ?: 0,
+        gaze = state.gaze[index] ?: Gaze(),
         index = index,
         shadowHeight = 10.dp,
         grounded = !fallen,
