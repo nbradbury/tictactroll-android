@@ -15,7 +15,7 @@
 - **Trolls with attitude.** They drop onto their crates with a squash, breathe, blink, look around at each other, startle when a neighbor lands, and grumble every few seconds. Block a winning line and the blocking troll says "bleh". The troll about to get bored yawns, and Bramble's trolls look up and ponder while the CPU thinks. Losers glance at the winning line before they topple into the dirt and pop, winners hop and look down at them, and a draw gets a slow, disapproving blink, a collective stare and a "meh" from everyone.
 - **Sound.** Background music, a thunk as each troll lands, and an ending sound for every outcome: a fanfare for a win, a sad trombone for losing to the CPU, and a brass shrug for a tie. A toggle on the menu mutes everything, and the setting is remembered.
 - **Feel.** Haptic ticks as trolls land, a ghost preview while your finger is on a crate, and Bramble has opinions about the difficulty you pick.
-- **Full screen.** The status and navigation bars are hidden; swipe in from an edge to see them briefly.
+- **Full screen, any screen.** The status and navigation bars are hidden (swipe in from an edge to see them briefly). Phones play in portrait; tablets and foldables can rotate, and wide windows lay the game out side by side.
 - **Accessible.** Works with TalkBack: every crate is labeled, moves (including the CPU's) are announced, and the layout holds up at large font sizes.
 - **Rematches alternate** who goes first; Restart keeps the same starter.
 
@@ -33,7 +33,7 @@ Requires Android Studio (or JDK 17+ with the Android SDK). The app runs on Andro
 
 ```
 app/src/main/java/com/nbradbury/tictactroll/
-  MainActivity.kt        entry point, full screen, saved settings, screen switching
+  MainActivity.kt        entry point, full screen, orientation, saved settings, screen switching
   game/GameLogic.kt      board, rules (classic and bored trolls), win detection, CPU move selection
   game/GameViewModel.kt  game state, turns, and the timers behind glances, chatter, yawns and endings
   ui/MenuScreen.kt       title, settings panel (mode, difficulty, Bored trolls), sound toggle
@@ -42,6 +42,7 @@ app/src/main/java/com/nbradbury/tictactroll/
   ui/TrollArt.kt         draws the troll art with movable irises and eyelids
   ui/Crate.kt            the wooden crate each cell is drawn as
   ui/Components.kt       shared pieces: backdrop, title, chunky button
+  ui/Adaptive.kt         scales the layout to the window and picks side by side for wide windows
   ui/GameSounds.kt       sound effects and troll voices
   ui/GameHaptics.kt      haptic feedback for landings and endings
   ui/BackgroundMusic.kt  looping music tied to the app lifecycle

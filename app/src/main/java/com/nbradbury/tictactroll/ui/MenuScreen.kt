@@ -77,6 +77,7 @@ import androidx.compose.ui.graphics.Shadow as TextShadow
 
 /** Bubble headroom, troll and name at their design size. */
 private val MENU_TROLLS_HEIGHT = 227.dp
+private val WIDE_CONTROLS_WIDTH = 380.dp
 
 @Composable
 fun MenuScreen(
@@ -107,51 +108,83 @@ private fun MenuContent(
     onRules: (Rules) -> Unit,
     onStart: () -> Unit,
 ) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(start = 24.dp, end = 24.dp, top = 36.dp, bottom = 28.dp),
-    ) {
-        BasicText(
-            stringResource(R.string.tagline).uppercase(),
-            style = mono(12, Eyebrow).copy(letterSpacing = 0.2.em, textAlign = TextAlign.Center),
-            // Clears the sound toggle in the corner; large text wraps instead of running under it.
-            modifier = Modifier.padding(horizontal = 48.dp),
+    val controls = @Composable {
+        SettingsCard(state, onMode, onDifficulty, onRules)
+        ChunkyButton(
+            text = stringResource(R.string.start),
+            style = lilita(24).copy(letterSpacing = 0.02.em),
+            height = 60.dp,
+            radius = 18.dp,
+            shadow = 5.dp,
+            onClick = onStart,
         )
-        val shadowOffset = with(LocalDensity.current) { 5.dp.toPx() }
-        TitleText(
-            style = dirt(66).copy(
-                lineHeight = 60.sp,
-                textAlign = TextAlign.Center,
-                shadow = TextShadow(TitleShadow, Offset(0f, shadowOffset), 0f),
-            ),
-            separator = "\n",
-        )
-        BasicText(stringResource(R.string.byline), style = sans(14, FontWeight.Normal, Muted))
-
-        // The trolls take the height left over, up to their design size, so the controls below always fit.
-        Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(18.dp),
-                modifier = Modifier.padding(top = 30.dp).heightIn(max = MENU_TROLLS_HEIGHT),
+    }
+    if (LocalWideLayout.current) {
+        // Side by side: title and trolls on the left, setup and Start on the right.
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(32.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = 32.dp, end = 32.dp, top = 24.dp, bottom = 24.dp),
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.weight(1f).fillMaxHeight(),
             ) {
-                MenuTroll(state, Team.A, MENU_A, 0)
-                MenuTroll(state, Team.B, MENU_B, 1)
+                MenuHeader()
+                MenuTrolls(state, Modifier.weight(1f))
             }
+            Column(
+                verticalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterVertically),
+                modifier = Modifier.width(WIDE_CONTROLS_WIDTH).fillMaxHeight(),
+            ) { controls() }
         }
+    } else {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = 24.dp, end = 24.dp, top = 36.dp, bottom = 28.dp),
+        ) {
+            MenuHeader()
+            MenuTrolls(state, Modifier.weight(1f))
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(14.dp)) { controls() }
+        }
+    }
+}
 
-        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            SettingsCard(state, onMode, onDifficulty, onRules)
-            ChunkyButton(
-                text = stringResource(R.string.start),
-                style = lilita(24).copy(letterSpacing = 0.02.em),
-                height = 60.dp,
-                radius = 18.dp,
-                shadow = 5.dp,
-                onClick = onStart,
-            )
+@Composable
+private fun MenuHeader() {
+    BasicText(
+        stringResource(R.string.tagline).uppercase(),
+        style = mono(12, Eyebrow).copy(letterSpacing = 0.2.em, textAlign = TextAlign.Center),
+        // Clears the sound toggle in the corner; large text wraps instead of running under it.
+        modifier = Modifier.padding(horizontal = 48.dp),
+    )
+    val shadowOffset = with(LocalDensity.current) { 5.dp.toPx() }
+    TitleText(
+        style = dirt(66).copy(
+            lineHeight = 60.sp,
+            textAlign = TextAlign.Center,
+            shadow = TextShadow(TitleShadow, Offset(0f, shadowOffset), 0f),
+        ),
+        separator = "\n",
+    )
+    BasicText(stringResource(R.string.byline), style = sans(14, FontWeight.Normal, Muted))
+}
+
+/** The trolls take the height left over, up to their design size, so the controls always fit. */
+@Composable
+private fun MenuTrolls(state: GameState, modifier: Modifier = Modifier) {
+    Box(modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(18.dp),
+            modifier = Modifier.padding(top = 30.dp).heightIn(max = MENU_TROLLS_HEIGHT),
+        ) {
+            MenuTroll(state, Team.A, MENU_A, 0)
+            MenuTroll(state, Team.B, MENU_B, 1)
         }
     }
 }

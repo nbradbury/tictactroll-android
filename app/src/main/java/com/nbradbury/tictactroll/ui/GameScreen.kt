@@ -40,6 +40,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
@@ -110,6 +111,7 @@ private const val STEP = 118 // cell + gap
 private const val BOARD = 344
 private val TOP_BAR_BUTTON_BAND = 96.dp
 private val TOP_SIDES = WindowInsetsSides.Top + WindowInsetsSides.Horizontal
+private val WIDE_PANEL_WIDTH = 380.dp
 private val PIECE_PADDING = PaddingValues(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 8.dp)
 // A bored troll swells like a bubble and vanishes as the burst goes off.
 private val BORED_EXIT = scaleOut(tween(POP_SWELL_MS, easing = FastOutLinearInEasing), targetScale = 1.25f) +
@@ -130,32 +132,36 @@ fun GameScreen(
     modifier: Modifier = Modifier,
 ) {
     val result = state.result
+    val wide = LocalWideLayout.current
+    // With the bars hidden, this keeps the top bar clear of the camera cutout.
+    val safeArea = Modifier
+        .fillMaxSize()
+        .windowInsetsPadding(WindowInsets.safeDrawing.only(TOP_SIDES))
+    val header = @Composable {
+        TopBar(onMenu, onRestart)
+        ScoreChips(state, Modifier.padding(top = 14.dp))
+        GameStatus(state, Modifier.padding(top = 22.dp))
+    }
     Box(modifier.fillMaxSize()) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .fillMaxSize()
-                // With the bars hidden, this keeps the top bar clear of the camera cutout.
-                .windowInsetsPadding(WindowInsets.safeDrawing.only(TOP_SIDES))
-                .padding(start = 16.dp, end = 16.dp, top = 8.dp),
-        ) {
-            TopBar(onMenu, onRestart)
-            ScoreChips(state, Modifier.padding(top = 14.dp))
-            val status = statusText(state)
-            val announcement = listOfNotNull(lastMoveAnnouncement(state), status).joinToString(" ")
-            BasicText(
-                status,
-                style = sans(17).copy(textAlign = TextAlign.Center),
-                modifier = Modifier
-                    .padding(top = 22.dp)
-                    .heightIn(min = 28.dp)
-                    // Read aloud whenever it changes, so TalkBack users hear every move, including the CPU's.
-                    .semantics {
-                        contentDescription = announcement
-                        liveRegion = LiveRegionMode.Polite
-                    },
-            )
-            Board(state, onCell, onFallenLanded, Modifier.padding(top = 26.dp))
+        if (wide) {
+            // Side by side: scores and status on the left, the board on the right.
+            Row(safeArea.padding(start = 24.dp, end = 24.dp, top = 16.dp)) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.width(WIDE_PANEL_WIDTH),
+                ) { header() }
+                Box(Modifier.weight(1f), contentAlignment = Alignment.TopCenter) {
+                    Board(state, onCell, onFallenLanded, Modifier.padding(top = 24.dp))
+                }
+            }
+        } else {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = safeArea.padding(start = 16.dp, end = 16.dp, top = 8.dp),
+            ) {
+                header()
+                Board(state, onCell, onFallenLanded, Modifier.padding(top = 26.dp))
+            }
         }
 
         AnimatedVisibility(
@@ -163,11 +169,33 @@ fun GameScreen(
             enter = slideInVertically(tween(400, easing = CubicBezierEasing(0.2f, 1.2f, 0.4f, 1f))) { it / 8 } +
                 fadeIn(tween(250)),
             exit = ExitTransition.None,
-            modifier = Modifier.align(Alignment.BottomCenter),
+            // Side by side, the sheet rises under the scores so the board stays in view.
+            modifier = if (wide) {
+                Modifier.align(Alignment.BottomStart).width(WIDE_PANEL_WIDTH + 48.dp)
+            } else {
+                Modifier.align(Alignment.BottomCenter)
+            },
         ) {
             if (result != null) ResultSheet(result.winner, onMenu, onRematch)
         }
     }
+}
+
+@Composable
+private fun GameStatus(state: GameState, modifier: Modifier = Modifier) {
+    val status = statusText(state)
+    val announcement = listOfNotNull(lastMoveAnnouncement(state), status).joinToString(" ")
+    BasicText(
+        status,
+        style = sans(17).copy(textAlign = TextAlign.Center),
+        modifier = modifier
+            .heightIn(min = 28.dp)
+            // Read aloud whenever it changes, so TalkBack users hear every move, including the CPU's.
+            .semantics {
+                contentDescription = announcement
+                liveRegion = LiveRegionMode.Polite
+            },
+    )
 }
 
 @Composable

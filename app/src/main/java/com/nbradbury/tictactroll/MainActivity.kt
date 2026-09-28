@@ -1,6 +1,8 @@
 package com.nbradbury.tictactroll
 
 import android.content.Context
+import android.content.SharedPreferences
+import android.content.pm.ActivityInfo
 import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -24,10 +26,12 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.nbradbury.tictactroll.game.GameState
 import com.nbradbury.tictactroll.game.GameViewModel
 import com.nbradbury.tictactroll.game.Rules
 import com.nbradbury.tictactroll.game.Screen
 import com.nbradbury.tictactroll.ui.BackgroundMusic
+import com.nbradbury.tictactroll.ui.FitToWindow
 import com.nbradbury.tictactroll.ui.GameHaptics
 import com.nbradbury.tictactroll.ui.GameScreen
 import com.nbradbury.tictactroll.ui.GameSounds
@@ -46,10 +50,15 @@ class MainActivity : ComponentActivity() {
             systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             hide(WindowInsetsCompat.Type.systemBars())
         }
+        // Phones stay in portrait; tablets and foldables can rotate, and get the side-by-side layout.
+        if (resources.configuration.smallestScreenWidthDp < LARGE_SCREEN_DP) {
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        }
         setContent { TicTacTrollApp() }
     }
 }
 
+private const val LARGE_SCREEN_DP = 600
 private const val KEY_SOUND = "sound_on"
 private const val KEY_BORED_TROLLS = "bored_trolls"
 
@@ -66,34 +75,45 @@ fun TicTacTrollApp() {
     GameSounds(state, enabled = soundOn)
     GameHaptics(state)
     Box(Modifier.fillMaxSize().backdrop()) {
-        when (state.screen) {
-            Screen.MENU -> MenuScreen(
+        FitToWindow(Modifier.fillMaxSize()) { Screens(vm, state, prefs, soundOn) { soundOn = it } }
+    }
+}
+
+@Composable
+private fun Screens(
+    vm: GameViewModel,
+    state: GameState,
+    prefs: SharedPreferences,
+    soundOn: Boolean,
+    onSoundOn: (Boolean) -> Unit,
+) {
+    when (state.screen) {
+        Screen.MENU -> MenuScreen(
+            state = state,
+            onMode = vm::setMode,
+            onDifficulty = vm::setDifficulty,
+            onRules = {
+                vm.setRules(it)
+                prefs.edit { putBoolean(KEY_BORED_TROLLS, it == Rules.ROLLING) }
+            },
+            onStart = vm::start,
+            soundOn = soundOn,
+            onSoundChange = {
+                onSoundOn(it)
+                prefs.edit { putBoolean(KEY_SOUND, it) }
+            },
+            modifier = Modifier.safeDrawingPadding(),
+        )
+        Screen.GAME -> {
+            BackHandler(onBack = vm::toMenu)
+            GameScreen(
                 state = state,
-                onMode = vm::setMode,
-                onDifficulty = vm::setDifficulty,
-                onRules = {
-                    vm.setRules(it)
-                    prefs.edit { putBoolean(KEY_BORED_TROLLS, it == Rules.ROLLING) }
-                },
-                onStart = vm::start,
-                soundOn = soundOn,
-                onSoundChange = {
-                    soundOn = it
-                    prefs.edit { putBoolean(KEY_SOUND, it) }
-                },
-                modifier = Modifier.safeDrawingPadding(),
+                onCell = vm::play,
+                onFallenLanded = vm::popFallen,
+                onMenu = vm::toMenu,
+                onRestart = vm::restart,
+                onRematch = vm::rematch,
             )
-            Screen.GAME -> {
-                BackHandler(onBack = vm::toMenu)
-                GameScreen(
-                    state = state,
-                    onCell = vm::play,
-                    onFallenLanded = vm::popFallen,
-                    onMenu = vm::toMenu,
-                    onRestart = vm::restart,
-                    onRematch = vm::rematch,
-                )
-            }
         }
     }
 }
