@@ -4,6 +4,9 @@ plugins {
     alias(libs.plugins.detekt)
 }
 
+// The Play upload key lives outside the repo: its path and passwords come from ~/.gradle/gradle.properties.
+val uploadStoreFile = providers.gradleProperty("TICTACTROLL_UPLOAD_STORE_FILE").orNull
+
 android {
     namespace = "com.nbradbury.tictactroll"
     compileSdk {
@@ -18,11 +21,24 @@ android {
         versionName = "1.0"
     }
 
+    signingConfigs {
+        if (uploadStoreFile != null) {
+            create("upload") {
+                storeFile = file(uploadStoreFile)
+                storePassword = providers.gradleProperty("TICTACTROLL_UPLOAD_STORE_PASSWORD").get()
+                keyAlias = providers.gradleProperty("TICTACTROLL_UPLOAD_KEY_ALIAS").get()
+                keyPassword = providers.gradleProperty("TICTACTROLL_UPLOAD_KEY_PASSWORD").get()
+            }
+        }
+    }
+
     buildTypes {
         release {
             optimization {
-                enable = false
+                enable = true
             }
+            // Without the upload key (e.g. on another machine) release builds are left unsigned.
+            signingConfig = signingConfigs.findByName("upload")
         }
     }
     compileOptions {
