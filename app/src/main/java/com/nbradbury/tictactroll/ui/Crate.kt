@@ -1,4 +1,4 @@
-package com.nbradbury.tic_tac_troll.ui
+package com.nbradbury.tictactroll.ui
 
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -13,11 +13,11 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
-import com.nbradbury.tic_tac_troll.ui.theme.CrateBorder
-import com.nbradbury.tic_tac_troll.ui.theme.CrateBrace
-import com.nbradbury.tic_tac_troll.ui.theme.CratePlank
-import com.nbradbury.tic_tac_troll.ui.theme.CrateSeam
-import com.nbradbury.tic_tac_troll.ui.theme.CrateShadow
+import com.nbradbury.tictactroll.ui.theme.CrateBorder
+import com.nbradbury.tictactroll.ui.theme.CrateBrace
+import com.nbradbury.tictactroll.ui.theme.CratePlank
+import com.nbradbury.tictactroll.ui.theme.CrateSeam
+import com.nbradbury.tictactroll.ui.theme.CrateShadow
 
 /** Draws a wooden crate (planks, diagonal brace, frame and shadows) with an optional [glow] outline. */
 fun Modifier.crate(glow: Color) = drawBehind {

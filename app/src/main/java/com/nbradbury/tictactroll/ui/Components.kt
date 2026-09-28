@@ -1,4 +1,4 @@
-package com.nbradbury.tic_tac_troll.ui
+package com.nbradbury.tictactroll.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -30,12 +30,12 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import com.nbradbury.tic_tac_troll.R
-import com.nbradbury.tic_tac_troll.ui.theme.Accent
-import com.nbradbury.tic_tac_troll.ui.theme.AccentShadow
-import com.nbradbury.tic_tac_troll.ui.theme.BackgroundBottom
-import com.nbradbury.tic_tac_troll.ui.theme.BackgroundTop
-import com.nbradbury.tic_tac_troll.ui.theme.OnAccent
+import com.nbradbury.tictactroll.R
+import com.nbradbury.tictactroll.ui.theme.Accent
+import com.nbradbury.tictactroll.ui.theme.AccentShadow
+import com.nbradbury.tictactroll.ui.theme.BackgroundBottom
+import com.nbradbury.tictactroll.ui.theme.BackgroundTop
+import com.nbradbury.tictactroll.ui.theme.OnAccent
 
 /** The mossy radial glow behind every screen: an ellipse 130% wide and 55% tall, centered at the top. */
 fun Modifier.backdrop() = drawBehind {

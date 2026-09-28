@@ -1,4 +1,4 @@
-package com.nbradbury.tic_tac_troll.ui.theme
+package com.nbradbury.tictactroll.ui.theme
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
@@ -7,7 +7,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import com.nbradbury.tic_tac_troll.R
+import com.nbradbury.tictactroll.R
 
 val LilitaOne = FontFamily(Font(R.font.lilita_one))
 val RubikDirt = FontFamily(Font(R.font.rubik_dirt))

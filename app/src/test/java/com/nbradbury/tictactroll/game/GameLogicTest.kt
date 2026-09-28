@@ -1,7 +1,7 @@
-package com.nbradbury.tic_tac_troll.game
+package com.nbradbury.tictactroll.game
 
-import com.nbradbury.tic_tac_troll.game.Team.A
-import com.nbradbury.tic_tac_troll.game.Team.B
+import com.nbradbury.tictactroll.game.Team.A
+import com.nbradbury.tictactroll.game.Team.B
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull

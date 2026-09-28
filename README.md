@@ -32,7 +32,7 @@ Requires Android Studio (or JDK 17+ with the Android SDK). The app runs on Andro
 ## Project layout
 
 ```
-app/src/main/java/com/nbradbury/tic_tac_troll/
+app/src/main/java/com/nbradbury/tictactroll/
   MainActivity.kt        entry point, full screen, saved settings, screen switching
   game/GameLogic.kt      board, rules (classic and bored trolls), win detection, CPU move selection
   game/GameViewModel.kt  game state, turns, and the timers behind glances, chatter, yawns and endings

@@ -1,4 +1,4 @@
-package com.nbradbury.tic_tac_troll.game
+package com.nbradbury.tictactroll.game
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

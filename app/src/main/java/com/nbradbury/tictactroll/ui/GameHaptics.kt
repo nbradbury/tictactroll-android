@@ -1,13 +1,13 @@
-package com.nbradbury.tic_tac_troll.ui
+package com.nbradbury.tictactroll.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import com.nbradbury.tic_tac_troll.game.GameState
-import com.nbradbury.tic_tac_troll.game.Mode
-import com.nbradbury.tic_tac_troll.game.Team
+import com.nbradbury.tictactroll.game.GameState
+import com.nbradbury.tictactroll.game.Mode
+import com.nbradbury.tictactroll.game.Team
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 

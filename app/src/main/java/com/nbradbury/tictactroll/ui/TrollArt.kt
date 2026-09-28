@@ -1,4 +1,4 @@
-package com.nbradbury.tic_tac_troll.ui
+package com.nbradbury.tictactroll.ui
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Canvas
@@ -15,8 +15,8 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.res.imageResource
-import com.nbradbury.tic_tac_troll.R
-import com.nbradbury.tic_tac_troll.game.Team
+import com.nbradbury.tictactroll.R
+import com.nbradbury.tictactroll.game.Team
 import kotlin.math.min
 
 /**

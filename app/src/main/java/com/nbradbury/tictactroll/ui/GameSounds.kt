@@ -1,4 +1,4 @@
-package com.nbradbury.tic_tac_troll.ui
+package com.nbradbury.tictactroll.ui
 
 import android.content.Context
 import android.media.AudioAttributes
@@ -8,12 +8,12 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import com.nbradbury.tic_tac_troll.R
-import com.nbradbury.tic_tac_troll.game.GameState
-import com.nbradbury.tic_tac_troll.game.MENU_A
-import com.nbradbury.tic_tac_troll.game.MENU_B
-import com.nbradbury.tic_tac_troll.game.Mode
-import com.nbradbury.tic_tac_troll.game.Team
+import com.nbradbury.tictactroll.R
+import com.nbradbury.tictactroll.game.GameState
+import com.nbradbury.tictactroll.game.MENU_A
+import com.nbradbury.tictactroll.game.MENU_B
+import com.nbradbury.tictactroll.game.Mode
+import com.nbradbury.tictactroll.game.Team
 import kotlin.random.Random
 
 /** Game sounds while [enabled]. Against the CPU a Bramble win is the player's loss, so it gets the trombone. */

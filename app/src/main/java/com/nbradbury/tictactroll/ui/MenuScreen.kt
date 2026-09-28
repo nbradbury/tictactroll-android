@@ -1,4 +1,4 @@
-package com.nbradbury.tic_tac_troll.ui
+package com.nbradbury.tictactroll.ui
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
@@ -50,29 +50,29 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
-import com.nbradbury.tic_tac_troll.R
-import com.nbradbury.tic_tac_troll.game.Difficulty
-import com.nbradbury.tic_tac_troll.game.Gaze
-import com.nbradbury.tic_tac_troll.game.GameState
-import com.nbradbury.tic_tac_troll.game.MENU_A
-import com.nbradbury.tic_tac_troll.game.MENU_B
-import com.nbradbury.tic_tac_troll.game.Mode
-import com.nbradbury.tic_tac_troll.game.Rules
-import com.nbradbury.tic_tac_troll.game.Team
-import com.nbradbury.tic_tac_troll.ui.theme.Accent
-import com.nbradbury.tic_tac_troll.ui.theme.Cream
-import com.nbradbury.tic_tac_troll.ui.theme.Eyebrow
-import com.nbradbury.tic_tac_troll.ui.theme.Ink
-import com.nbradbury.tic_tac_troll.ui.theme.Muted
-import com.nbradbury.tic_tac_troll.ui.theme.MutedLabel
-import com.nbradbury.tic_tac_troll.ui.theme.OnAccent
-import com.nbradbury.tic_tac_troll.ui.theme.Outline
-import com.nbradbury.tic_tac_troll.ui.theme.Scrim
-import com.nbradbury.tic_tac_troll.ui.theme.TitleShadow
-import com.nbradbury.tic_tac_troll.ui.theme.dirt
-import com.nbradbury.tic_tac_troll.ui.theme.lilita
-import com.nbradbury.tic_tac_troll.ui.theme.mono
-import com.nbradbury.tic_tac_troll.ui.theme.sans
+import com.nbradbury.tictactroll.R
+import com.nbradbury.tictactroll.game.Difficulty
+import com.nbradbury.tictactroll.game.Gaze
+import com.nbradbury.tictactroll.game.GameState
+import com.nbradbury.tictactroll.game.MENU_A
+import com.nbradbury.tictactroll.game.MENU_B
+import com.nbradbury.tictactroll.game.Mode
+import com.nbradbury.tictactroll.game.Rules
+import com.nbradbury.tictactroll.game.Team
+import com.nbradbury.tictactroll.ui.theme.Accent
+import com.nbradbury.tictactroll.ui.theme.Cream
+import com.nbradbury.tictactroll.ui.theme.Eyebrow
+import com.nbradbury.tictactroll.ui.theme.Ink
+import com.nbradbury.tictactroll.ui.theme.Muted
+import com.nbradbury.tictactroll.ui.theme.MutedLabel
+import com.nbradbury.tictactroll.ui.theme.OnAccent
+import com.nbradbury.tictactroll.ui.theme.Outline
+import com.nbradbury.tictactroll.ui.theme.Scrim
+import com.nbradbury.tictactroll.ui.theme.TitleShadow
+import com.nbradbury.tictactroll.ui.theme.dirt
+import com.nbradbury.tictactroll.ui.theme.lilita
+import com.nbradbury.tictactroll.ui.theme.mono
+import com.nbradbury.tictactroll.ui.theme.sans
 import androidx.compose.ui.graphics.Shadow as TextShadow
 
 /** Bubble headroom, troll and name at their design size. */

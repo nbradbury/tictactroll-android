@@ -1,4 +1,4 @@
-package com.nbradbury.tic_tac_troll.ui.theme
+package com.nbradbury.tictactroll.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

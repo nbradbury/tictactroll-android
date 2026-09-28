@@ -1,4 +1,4 @@
-package com.nbradbury.tic_tac_troll.ui
+package com.nbradbury.tictactroll.ui
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseIn
@@ -44,14 +44,14 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import com.nbradbury.tic_tac_troll.R
-import com.nbradbury.tic_tac_troll.game.Gaze
-import com.nbradbury.tic_tac_troll.game.Team
-import com.nbradbury.tic_tac_troll.ui.theme.Bramble
-import com.nbradbury.tic_tac_troll.ui.theme.BubbleCream
-import com.nbradbury.tic_tac_troll.ui.theme.BubbleInk
-import com.nbradbury.tic_tac_troll.ui.theme.Gorp
-import com.nbradbury.tic_tac_troll.ui.theme.lilita
+import com.nbradbury.tictactroll.R
+import com.nbradbury.tictactroll.game.Gaze
+import com.nbradbury.tictactroll.game.Team
+import com.nbradbury.tictactroll.ui.theme.Bramble
+import com.nbradbury.tictactroll.ui.theme.BubbleCream
+import com.nbradbury.tictactroll.ui.theme.BubbleInk
+import com.nbradbury.tictactroll.ui.theme.Gorp
+import com.nbradbury.tictactroll.ui.theme.lilita
 import kotlin.random.Random
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

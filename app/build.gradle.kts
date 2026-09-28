@@ -5,13 +5,13 @@ plugins {
 }
 
 android {
-    namespace = "com.nbradbury.tic_tac_troll"
+    namespace = "com.nbradbury.tictactroll"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.nbradbury.tic_tac_troll"
+        applicationId = "com.nbradbury.tictactroll"
         minSdk = 30
         targetSdk = 37
         versionCode = 1

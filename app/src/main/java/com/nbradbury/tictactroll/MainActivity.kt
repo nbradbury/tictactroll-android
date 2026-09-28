@@ -1,4 +1,4 @@
-package com.nbradbury.tic_tac_troll
+package com.nbradbury.tictactroll
 
 import android.content.Context
 import android.graphics.Color
@@ -24,15 +24,15 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.nbradbury.tic_tac_troll.game.GameViewModel
-import com.nbradbury.tic_tac_troll.game.Rules
-import com.nbradbury.tic_tac_troll.game.Screen
-import com.nbradbury.tic_tac_troll.ui.BackgroundMusic
-import com.nbradbury.tic_tac_troll.ui.GameHaptics
-import com.nbradbury.tic_tac_troll.ui.GameScreen
-import com.nbradbury.tic_tac_troll.ui.GameSounds
-import com.nbradbury.tic_tac_troll.ui.MenuScreen
-import com.nbradbury.tic_tac_troll.ui.backdrop
+import com.nbradbury.tictactroll.game.GameViewModel
+import com.nbradbury.tictactroll.game.Rules
+import com.nbradbury.tictactroll.game.Screen
+import com.nbradbury.tictactroll.ui.BackgroundMusic
+import com.nbradbury.tictactroll.ui.GameHaptics
+import com.nbradbury.tictactroll.ui.GameScreen
+import com.nbradbury.tictactroll.ui.GameSounds
+import com.nbradbury.tictactroll.ui.MenuScreen
+import com.nbradbury.tictactroll.ui.backdrop
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
