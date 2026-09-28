@@ -1,0 +1,25 @@
+A game of mild contempt.
+
+Tic Tac Troll is tic-tac-toe played with two squads of trolls: Gorp's blue trolls and Bramble's red ones. They drop onto wooden crates, look each other over, blink, and grumble "meh" and "bleh" while you play. Block a winning line and the troll who did it lets you know. Lose, and your trolls topple into the dirt and pop.
+
+PLAY YOUR WAY
+• Take on Bramble at three levels: Easy, Medium, or Troll, which never loses a classic game.
+• Or pass the phone to a friend for two-player games.
+
+BORED TROLLS MODE
+Each side keeps only three trolls. Play a fourth and your oldest gets bored and pops like a bubble, unless it completes a row. No draws, and a lot more to think about.
+
+TROLLS WITH ATTITUDE
+• Trolls drop in with a squash, startle when a neighbor lands, and turn to stare at every new arrival.
+• Bramble's trolls look up and ponder while the CPU thinks. Barely.
+• Winners hop and gloat; a draw gets a slow, disapproving blink and a "meh" from everyone.
+
+SOUND AND FEEL
+• Background music, landing thunks, a fanfare for a win, a sad trombone for losing to the CPU, and a brass shrug for a tie.
+• Haptic taps as trolls land, and a preview while your finger is on a crate.
+• One tap mutes everything; your settings are remembered.
+
+FOR EVERYONE
+• Plays full screen on phones, and fills tablets and foldables in portrait or landscape.
+• Works with TalkBack: every crate is labeled and every move is announced.
+• No ads, no accounts, no internet connection, and no data collected.

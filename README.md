@@ -29,6 +29,16 @@ Requires Android Studio (or JDK 17+ with the Android SDK). The app runs on Andro
 ./gradlew detekt         # static analysis
 ```
 
+## Releasing
+
+Release builds are shrunk with R8 and signed with the Play upload key, whose path and passwords come from `~/.gradle/gradle.properties` (`TICTACTROLL_UPLOAD_STORE_FILE`, `TICTACTROLL_UPLOAD_STORE_PASSWORD`, `TICTACTROLL_UPLOAD_KEY_ALIAS`, `TICTACTROLL_UPLOAD_KEY_PASSWORD`). Without them, release builds are unsigned.
+
+```sh
+./gradlew bundleRelease  # app/build/outputs/bundle/release/app-release.aab, for Play Console
+```
+
+Bump `versionCode` in `app/build.gradle.kts` for every upload. The store listing text, icon, feature graphic and screenshots live in `fastlane/metadata/android/en-US/`, and the privacy policy is [PRIVACY.md](PRIVACY.md), published at https://gist.github.com/nbradbury/71e17962b350c115c72e21c9878aeb85.
+
 ## Project layout
 
 ```
