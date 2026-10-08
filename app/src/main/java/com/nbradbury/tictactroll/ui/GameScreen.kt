@@ -523,11 +523,11 @@ private fun BoxScope.Piece(state: GameState, team: Team, index: Int, fallen: Boo
     }
 }
 
-/** Winners hop; during a draw's stare, everyone shrugs; the bored troll yawns. */
+/** The three trolls in the winning line hop; during a draw's stare, everyone shrugs; the bored troll yawns. */
 private fun moodOf(state: GameState, team: Team, index: Int): Mood {
     val result = state.result
     return when {
-        result?.winner == team -> Mood.HOP
+        result?.winner == team && index in result.line -> Mood.HOP
         result?.isDraw == true && state.stare -> Mood.SHRUG
         state.yawning == index -> Mood.YAWN
         else -> Mood.IDLE
