@@ -50,9 +50,8 @@ import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -405,7 +404,7 @@ private fun Board(
                     // Keyed on the move, so each new departure bursts once.
                     lastTeam[0]?.let { PopBurst(it.color, trigger = state.history) }
                 }
-                if (team == null && held && clickable) {
+                if (held && clickable) {
                     // While holding, a ghost of the troll about to land; sliding off the crate cancels the move.
                     TrollArt(state.turn, Modifier.matchParentSize().padding(PIECE_PADDING).alpha(0.35f))
                 }
@@ -418,15 +417,13 @@ private fun Board(
 @Composable
 private fun rememberHeld(interaction: MutableInteractionSource): Boolean {
     val pressed by interaction.collectIsPressedAsState()
-    var held by remember { mutableStateOf(false) }
-    LaunchedEffect(pressed) {
-        held = false
+    return produceState(false, pressed) {
+        value = false
         if (pressed) {
             delay(GHOST_HOLD_MS)
-            held = true
+            value = true
         }
-    }
-    return held
+    }.value
 }
 
 /** "Row 1, column 2: Gorp, leaves next", 1-based for TalkBack. */
