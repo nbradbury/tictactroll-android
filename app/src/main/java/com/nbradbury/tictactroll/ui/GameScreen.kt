@@ -50,7 +50,9 @@ import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -121,6 +123,7 @@ private const val POP_SWELL_MS = 140
 private const val POP_BURST_MS = 380
 private const val POP_DROPLETS = 8
 private const val POP_AFTER_LANDING_MS = 250L
+private const val GHOST_HOLD_MS = 200L
 
 @Composable
 fun GameScreen(
@@ -367,7 +370,7 @@ private fun Board(
             val fallen = team != null && state.isFallen(team)
             val clickable = team == null && state.acceptsMove
             val interaction = remember { MutableInteractionSource() }
-            val pressed by interaction.collectIsPressedAsState()
+            val held = rememberHeld(interaction)
             // Keeps a departing troll's team for its exit animation; a plain holder so writing it doesn't recompose.
             val lastTeam = remember { arrayOfNulls<Team>(1) }
             if (team != null) lastTeam[0] = team
@@ -402,13 +405,28 @@ private fun Board(
                     // Keyed on the move, so each new departure bursts once.
                     lastTeam[0]?.let { PopBurst(it.color, trigger = state.history) }
                 }
-                if (team == null && pressed && clickable) {
-                    // A ghost of the troll about to land; sliding off the crate cancels the move.
+                if (team == null && held && clickable) {
+                    // While holding, a ghost of the troll about to land; sliding off the crate cancels the move.
                     TrollArt(state.turn, Modifier.matchParentSize().padding(PIECE_PADDING).alpha(0.35f))
                 }
             }
         }
     }
+}
+
+/** True once [interaction] has been pressed for [GHOST_HOLD_MS], so a quick tap never shows the ghost preview. */
+@Composable
+private fun rememberHeld(interaction: MutableInteractionSource): Boolean {
+    val pressed by interaction.collectIsPressedAsState()
+    var held by remember { mutableStateOf(false) }
+    LaunchedEffect(pressed) {
+        held = false
+        if (pressed) {
+            delay(GHOST_HOLD_MS)
+            held = true
+        }
+    }
+    return held
 }
 
 /** "Row 1, column 2: Gorp, leaves next", 1-based for TalkBack. */

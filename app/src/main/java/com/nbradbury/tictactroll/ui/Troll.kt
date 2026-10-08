@@ -139,7 +139,6 @@ fun Troll(
                     val drop = landing.drop.value
                     val squash = landing.squash.value
                     val stretch = body.stretch.value
-                    alpha = (drop * 3f).coerceIn(0f, 1f)
                     // Squashes wide on impact, stretches tall in a yawn.
                     scaleX = (1f + 0.12f * squash) * (1f - 0.4f * stretch)
                     scaleY = (1f - 0.16f * squash) * (1f + stretch) * breathe
