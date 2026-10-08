@@ -80,6 +80,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.nbradbury.tictactroll.R
+import com.nbradbury.tictactroll.game.CELLS
 import com.nbradbury.tictactroll.game.COLUMNS
 import com.nbradbury.tictactroll.game.GameState
 import com.nbradbury.tictactroll.game.Gaze
@@ -346,6 +347,20 @@ private fun Board(
                 .background(Brush.verticalGradient(listOf(DirtTop, DirtBottom)))
                 .drawBehind { drawRect(Grass, size = size.copy(height = 3.dp.toPx())) }
         )
+        // All crates sit in one layer under the trolls, so a falling loser's raised cell can't carry its crate over
+        // a neighbor's speech bubble.
+        repeat(CELLS) { i ->
+            val glow by animateColorAsState(
+                if (result?.winner != null && i in result.line) result.winner.color else Color.Transparent,
+                tween(300),
+            )
+            Box(
+                Modifier
+                    .offset((i % COLUMNS * STEP).dp, (i / COLUMNS * STEP).dp)
+                    .size(CELL.dp)
+                    .crate(glow),
+            )
+        }
         state.board.forEachIndexed { i, team ->
             val row = i / COLUMNS
             val col = i % COLUMNS
@@ -358,16 +373,12 @@ private fun Board(
             if (team != null) lastTeam[0] = team
             val description = cellDescription(i, team, leaving = state.leavingNext == i)
             val placeLabel = stringResource(R.string.place_troll, state.turn.displayName())
-            val glow by animateColorAsState(
-                if (result?.winner != null && i in result.line) result.winner.color else Color.Transparent,
-                tween(300),
-            )
             Box(
                 Modifier
                     .offset((col * STEP).dp, (row * STEP).dp)
                     .size(CELL.dp)
+                    // A losing troll falls in front of the trolls below it.
                     .zIndex(if (fallen) 10f + (2 - row) else 1f)
-                    .crate(glow)
                     .clickable(
                         interactionSource = interaction,
                         indication = null,
