@@ -2,11 +2,8 @@
 
 *A game of mild contempt.* Tic-tac-toe for Android, played with trolls who look each other over, grumble "meh" and "bleh", and topple off their crates into the dirt, then pop, when they lose.
 
-<p>
-  <img src="docs/menu.png" width="240" alt="Menu screen with Gorp and Bramble">
-  <img src="docs/game.png" width="240" alt="A game in progress on wooden crates">
-  <img src="docs/win.png" width="240" alt="Gorp wins while Bramble's trolls fall into the dirt and pop">
-</p>
+[untitled.webm](https://github.com/user-attachments/assets/ad3f0d30-1d45-4ef7-8b6d-bc772543ae2d)
+
 
 Looking for an iOS port? You'll find it [here](https://github.com/nbradbury/tictactroll-ios/).
 
