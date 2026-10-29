@@ -8,6 +8,8 @@
   <img src="docs/win.png" width="240" alt="Gorp wins while Bramble's trolls fall into the dirt and pop">
 </p>
 
+Looking for an iOS port? You'll find it [here](https://github.com/nbradbury/tictactroll-ios/).
+
 ## Features
 
 - **Play the CPU or a friend.** Three CPU skill levels: Easy (random), Medium (wins or blocks when it can, mostly), and Troll (minimax; never loses in classic games). Two-player mode is pass-and-play.
