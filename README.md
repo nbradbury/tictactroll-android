@@ -1,4 +1,4 @@
-# <img src="fastlane/metadata/android/en-US/images/icon.png" width="48" align="absmiddle" alt=""> Tic Tac Troll
+# <img src="fastlane/metadata/android/en-US/images/icon.png" width="48" align="absmiddle" alt=""> Tic Tac Troll for Android
 
 *A game of mild contempt.* Tic-tac-toe for Android, played with trolls who look each other over, grumble "meh" and "bleh", and topple off their crates into the dirt, then pop, when they lose.
 
